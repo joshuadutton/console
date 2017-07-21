@@ -5,60 +5,14 @@ const cssnano = require('cssnano')
 const path = require('path')
 const cheerio = require('cheerio')
 const fs = require('fs')
-
-const vendor = [
-  'auth0-lock',
-  'babel-plugin-transform-async-to-generator',
-  'bluebird',
-  'calculate-size',
-  'classnames',
-  'cookiestore',
-  'cuid',
-  'drumstick',
-  'graphiql',
-  'immutable',
-  'lodash',
-  'lokka',
-  'lokka-transport-http',
-  'map-props',
-  'moment',
-  'normalize.css',
-  'rc-tooltip',
-  'react',
-  'react-addons-pure-render-mixin',
-  'react-addons-shallow-compare',
-  'react-autocomplete',
-  'react-click-outside',
-  'react-codemirror',
-  'react-copy-to-clipboard',
-  'react-datetime',
-  'react-dom',
-  'react-ga',
-  'react-helmet',
-  'react-input-enhancements',
-  'react-notification-system',
-  'react-redux',
-  'react-relay',
-  'react-router',
-  'react-router-relay',
-  'react-tagsinput',
-  'react-tether',
-  'react-toggle-button',
-  'react-tooltip',
-  'react-twitter-widgets',
-  'react-virtualized',
-  'redux',
-  'redux-actions',
-  'redux-logger',
-  'redux-thunk',
-  'styled-components',
-  'tachyons',
-]
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const HappyPack = require('happypack')
 
 module.exports = {
   devtool: 'cheap-module-eval-source-map',
   entry: {
     app: [
+      'babel-polyfill',
       './src/main',
       './src/styles/codemirror.css',
       // './src/styles/graphiql.css',
@@ -69,7 +23,6 @@ module.exports = {
       'graphcool-graphiql/graphiql_dark.css',
     ],
     styles: 'graphcool-styles/dist/styles.css',
-    vendor,
   },
   output: {
     filename: '[name].[hash].js',
@@ -89,15 +42,24 @@ module.exports = {
       loader: 'style-loader!css-loader',
     }, {
       test: /\.scss$/,
-      // loader: 'style!css?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss!sass?sourceMap',
       loader: 'style-loader!css-loader?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader!sass-loader',
       exclude: /node_modules/,
-    }, {
+    },
+      {
       test: /\.ts(x?)$/,
-      loader: 'babel-loader!awesome-typescript-loader',
-    }, {
+      include: __dirname + '/src',
+      use: [
+        {
+          loader: 'happypack/loader?id=babel',
+        },
+        {
+          loader: 'happypack/loader?id=ts',
+        }
+      ],
+    },
+    {
       test: /\.js$/,
-      loader: 'babel-loader',
+      loader: 'happypack/loader?id=babel',
       exclude: /node_modules/,
     }, {
       test: /\.mp3$/,
@@ -114,9 +76,14 @@ module.exports = {
     }],
   },
   plugins: [
+    new ForkTsCheckerWebpackPlugin({
+      // watch: './src',
+    }),
     new webpack.DefinePlugin({
       __BACKEND_ADDR__: JSON.stringify(process.env.BACKEND_ADDR.toString()),
-      __BACKEND_WS_ADDR__: JSON.stringify(process.env.BACKEND_WS_ADDR || "wss://dev.subscriptions.graph.cool"),
+      __SUBSCRIPTIONS_EU_WEST_1__: JSON.stringify(process.env.SUBSCRIPTIONS_EU_WEST_1 || "wss://dev.subscriptions.graph.cool"),
+      __SUBSCRIPTIONS_US_WEST_2__: JSON.stringify(process.env.SUBSCRIPTIONS_US_WEST_1 || "wss://dev.subscriptions.us-west-2.graph.cool"),
+      __SUBSCRIPTIONS_AP_NORTHEAST_1__: JSON.stringify(process.env.SUBSCRIPTIONS_AP_NORTHEAST_1 || "wss://dev.subscriptions.ap-northeast-1.graph.cool"),
       __HEARTBEAT_ADDR__: false,
       __AUTH0_DOMAIN__: '"graphcool-customers-dev.auth0.com"',
       __AUTH0_CLIENT_ID__: '"2q6oEEGaIPv45R7v60ZMnkfAgY49pNnm"',
@@ -124,6 +91,7 @@ module.exports = {
       __GA_CODE__: false,
       __INTERCOM_ID__: '"rqszgt2h"',
       __STRIPE_PUBLISHABLE_KEY__: '"pk_test_BpvAdppmXbqmkv8NQUqHRplE"',
+      __CLI_AUTH_TOKEN_ENDPOINT__: JSON.stringify(process.env.CLI_AUTH_TOKEN_ENDPOINT || "https://cli-auth-api.graph.cool/dev"),
       'process.env': {
         'NODE_ENV': JSON.stringify('dev'),
       },
@@ -134,6 +102,7 @@ module.exports = {
       template: 'src/index.html',
       templateContent: templateContent(),
     }),
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
     new webpack.NormalModuleReplacementPlugin(/\/iconv-loader$/, 'node-noop'),
     new webpack.optimize.CommonsChunkPlugin('vendor'),
     new webpack.LoaderOptionsPlugin({
@@ -161,6 +130,16 @@ module.exports = {
     new webpack.DllReferencePlugin({
       context: '.',
       manifest: require('./dll/vendor-manifest.json'),
+    }),
+    new HappyPack({
+      id: 'ts',
+      threads: 2,
+      loaders: [ 'ts-loader?' + JSON.stringify({happyPackMode: true}) ],
+    }),
+    new HappyPack({
+      id: 'babel',
+      threads: 2,
+      loaders: [ 'babel-loader' ],
     }),
     // new BundleAnalyzerPlugin(),
   ],

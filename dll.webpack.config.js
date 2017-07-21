@@ -2,14 +2,15 @@ const webpack = require('webpack')
 
 const vendor = [
   'auth0-lock',
-  'babel-plugin-transform-async-to-generator',
   'bluebird',
   'calculate-size',
   'classnames',
   'cookiestore',
+  'codemirror',
   'cuid',
   'drumstick',
   'graphiql',
+  'graphql-voyager',
   'immutable',
   'lodash',
   'lokka',
@@ -51,8 +52,6 @@ const vendor = [
 
 module.exports = {
   entry: {
-    // create two library bundles, one with jQuery and
-    // another with Angular and related libraries
     vendor
   },
 

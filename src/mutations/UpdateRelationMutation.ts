@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 
 interface Props {
   relationId: string
@@ -10,6 +10,8 @@ interface Props {
   fieldOnRightModelName: string
   fieldOnLeftModelIsList: boolean
   fieldOnRightModelIsList: boolean
+  fieldOnLeftModelIsRequired: boolean
+  fieldOnRightModelIsRequired: boolean
 }
 
 interface Response {
@@ -60,6 +62,8 @@ export default class UpdateRelationMutation extends Relay.Mutation<Props, Respon
       fieldOnRightModelName: this.props.fieldOnRightModelName,
       fieldOnLeftModelIsList: this.props.fieldOnLeftModelIsList,
       fieldOnRightModelIsList: this.props.fieldOnRightModelIsList,
+      fieldOnLeftModelIsRequired: this.props.fieldOnLeftModelIsRequired,
+      fieldOnRightModelIsRequired: this.props.fieldOnRightModelIsRequired,
     }
   }
 }

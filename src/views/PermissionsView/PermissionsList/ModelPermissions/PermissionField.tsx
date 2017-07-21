@@ -8,10 +8,11 @@ interface Props {
   selected?: boolean
   onClick?: () => void
   className?: string
+  editable?: boolean
 }
 
 const PermissionField = (props: Props) => {
-  const {field, disabled, selected, className, onClick} = props
+  const {field, disabled, selected, className, onClick, editable} = props
   const {name} = field
   return (
     <div
@@ -21,6 +22,7 @@ const PermissionField = (props: Props) => {
         {
           disabled,
           selected,
+          editable,
         },
       )}
       onClick={onClick}
@@ -29,6 +31,12 @@ const PermissionField = (props: Props) => {
         .permission-tag {
           @p: .br2, .bgBlack04, .black60, .inlineFlex;
           padding: 6px 6px 6px 9px;
+        }
+        .permission-tag.editable:not(.disabled):not(.selected):hover {
+          @p: .bgBlack10, .black70;
+        }
+        .permission-tag.editable.selected:not(.disabled):hover {
+          @p: .o70;
         }
         .permission-tag.selected {
           @p: .bgBlue, .white;

@@ -1,4 +1,4 @@
-import {injectNetworkLayer, DefaultNetworkLayer, Transaction} from 'react-relay'
+import {injectNetworkLayer, DefaultNetworkLayer, Transaction} from 'react-relay/classic'
 import {ShowNotificationCallback} from '../types/utils'
 import * as cookiestore from 'cookiestore'
 import {Lokka} from 'lokka'
@@ -9,16 +9,20 @@ import {Field, OrderBy} from '../types/types'
 import {TypedValue} from '../types/utils'
 
 export function updateNetworkLayer (): void {
-  const isLoggedin = cookiestore.has('graphcool_auth_token') && cookiestore.has('graphcool_customer_id')
-  const headers = isLoggedin
-    ? {
-      'Authorization': `Bearer ${cookiestore.get('graphcool_auth_token')}`,
-    }
-    : null
-  const api = `${__BACKEND_ADDR__}/system`
-  const layer = new DefaultNetworkLayer(api, { headers, retryDelays: [] })
+  try {
+    const isLoggedin = cookiestore.has('graphcool_auth_token') && cookiestore.has('graphcool_customer_id')
+    const headers = isLoggedin
+      ? {
+        'Authorization': `Bearer ${cookiestore.get('graphcool_auth_token')}`,
+      }
+      : null
+    const api = `${__BACKEND_ADDR__}/system`
+    const layer = new DefaultNetworkLayer(api, { headers, retryDelays: [] })
 
-  injectNetworkLayer(layer)
+    injectNetworkLayer(layer)
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 export function onFailureShowNotification (
@@ -27,6 +31,11 @@ export function onFailureShowNotification (
 ): void {
   const error = transaction.getError() as any
   // NOTE if error returns non-200 response, there is no `source` provided (probably because of fetch)
+  if (typeof Raven !== 'undefined') {
+    Raven.captureException(error, {
+      tags: {url: location.pathname},
+    })
+  }
   if (error.source && error.source.errors) {
     return error.source.errors
       .map(error => ({message: error.message, level: 'error'}))

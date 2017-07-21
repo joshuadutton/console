@@ -1,7 +1,8 @@
 import * as React from 'react'
+import { Seat } from '../../../types/types'
 
 interface Props {
-  seats: string[]
+  seats: Seat[]
   maxSeats: number
   className?: string
 }
@@ -24,12 +25,12 @@ export default class Seats extends React.Component<Props, {}> {
   private usedSeats = (): JSX.Element => {
     return (
       <div className='flex'>
-        {this.props.seats.map((name, i) => {
+        {this.props.seats.map((seat, i) => {
           return (<div
             key={i}
             className='flex itemsCenter justifyCenter mr4 bgLightgreen20 green br100 fw7 f14'
             style={{width: '22px', height: '22px', marginTop: -2}}
-          >{name.charAt(0)}</div>)
+          >{seat.name ? seat.name.charAt(0) : seat.email.charAt(0)}</div>)
         })}
       </div>
     )

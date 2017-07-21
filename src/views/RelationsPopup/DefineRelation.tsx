@@ -19,6 +19,10 @@ interface Props {
   didChangeFieldNameOnRightModel: (newFieldName: string) => void
   fieldOnLeftModelName: string | null
   fieldOnRightModelName: string | null
+  fieldOnLeftModelIsRequired: boolean
+  fieldOnRightModelIsRequired: boolean
+  didChangeFieldOnLeftModelIsRequired: (isRequired: boolean) => void
+  didChangeFieldOnRightModelIsRequired: (isRequired: boolean) => void
   leftInputIsBreakingChange: boolean
   rightInputIsBreakingChange: boolean
   leftModelIsBreakingChange: boolean
@@ -54,6 +58,10 @@ export default class DefineRelation extends React.Component<Props, {}> {
           rightModelIsBreakingChange={this.props.rightModelIsBreakingChange}
           forbiddenFieldNamesForLeftModel={this.props.forbiddenFieldNamesForLeftModel}
           forbiddenFieldNamesForRightModel={this.props.forbiddenFieldNamesForRightModel}
+          fieldOnLeftModelIsRequired={this.props.fieldOnLeftModelIsRequired}
+          fieldOnRightModelIsRequired={this.props.fieldOnRightModelIsRequired}
+          didChangeFieldOnLeftModelIsRequired={this.props.didChangeFieldOnLeftModelIsRequired}
+          didChangeFieldOnRightModelIsRequired={this.props.didChangeFieldOnRightModelIsRequired}
         />
         <RelationInfo
           leftModel={this.props.leftSelectedModel}

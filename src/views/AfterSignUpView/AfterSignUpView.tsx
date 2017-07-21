@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import { withRouter } from 'react-router'
 import {$p, $v, Icon} from 'graphcool-styles'
 import * as cx from 'classnames'
@@ -21,7 +21,7 @@ const CustomInput = styled.input`
   -webkit-text-fill-color: transparent;
   width: 620px;
   line-height: 1.5;
- 
+
   &::-webkit-input-placeholder {
     color: ${$v.gray30};
     text-shadow: none;
@@ -178,6 +178,7 @@ class AfterSignUpView extends React.Component<Props, State> {
                 onChange={this.onChange}
                 onKeyDown={this.onKeyDown}
                 type='text'
+                data-test='source'
               />
             </CustomInputWrapper>
           </div>
@@ -198,6 +199,7 @@ class AfterSignUpView extends React.Component<Props, State> {
                 },
               )}
               onClick={this.gotoConsole}
+              data-test='open-console'
             >
               Open Console
             </div>

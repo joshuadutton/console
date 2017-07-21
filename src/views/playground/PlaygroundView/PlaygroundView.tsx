@@ -1,9 +1,7 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import Helmet from 'react-helmet'
 import PopupWrapper from '../../../components/PopupWrapper/PopupWrapper'
-import PlaygroundAPopup from '../../../components/onboarding/PlaygroundAPopup/PlaygroundAPopup'
-import PlaygroundBPopup from '../../../components/onboarding/PlaygroundBPopup/PlaygroundBPopup'
 import { Lokka } from 'lokka'
 import { Transport } from 'lokka-transport-http'
 import GraphiQL from 'graphiql'
@@ -29,8 +27,8 @@ import CodeGenerationPopup from './CodeGenerationPopup/CodeGenerationPopup'
 import tracker from '../../../utils/metrics'
 import {ConsoleEvents} from 'graphcool-metrics'
 import Playground from 'graphcool-graphiql'
-
-require('graphcool-graphiql/graphiql_dark.css')
+import getSubscriptionEndpoint from '../../../utils/region'
+import Tether from '../../../components/Tether/Tether'
 
 const DASHBOARD_ADMIN = {
   id: 'ADMIN',
@@ -72,7 +70,6 @@ interface Props {
   previousStep: () => any
   showPopup: (popup: Popup) => void
 }
-
 interface State {
   users: User[]
   historyVisible: boolean
@@ -108,7 +105,8 @@ class PlaygroundView extends React.Component<Props, State> {
     this.guestLokka = new Lokka({ transport: guestTransport })
 
     const usedPlayground = window.localStorage.getItem(`used-playground-${this.props.viewer.project.id}`)
-    const isOnboarding = props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2')
+    // const isOnboarding = props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2')
+    const isOnboarding = true
 
     this.state = {
       users: [DASHBOARD_ADMIN, GUEST],
@@ -126,19 +124,19 @@ class PlaygroundView extends React.Component<Props, State> {
   }
 
   componentDidUpdate (nextProps: Props) {
-    if (this.props.gettingStartedState.step !== nextProps.gettingStartedState.step) {
-      if (nextProps.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2') ||
-          nextProps.gettingStartedState.isCurrentStep('STEP4_CLICK_TEASER_PART2')) {
-        this.setState({
-          query: ONBOARDING_QUERY_PART1,
-        } as State)
-      }
-      if (nextProps.gettingStartedState.isCurrentStep('STEP4_CLICK_TEASER_STEP5')) {
-        this.setState({
-          query: ONBOARDING_QUERY_PART2,
-        } as State)
-      }
-    }
+    // if (this.props.gettingStartedState.step !== nextProps.gettingStartedState.step) {
+    //   if (nextProps.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2') ||
+    //       nextProps.gettingStartedState.isCurrentStep('STEP4_CLICK_TEASER_PART2')) {
+    //     this.setState({
+    //       query: ONBOARDING_QUERY_PART1,
+    //     } as State)
+    //   }
+    //   if (nextProps.gettingStartedState.isCurrentStep('STEP4_CLICK_TEASER_STEP5')) {
+    //     this.setState({
+    //       query: ONBOARDING_QUERY_PART2,
+    //     } as State)
+    //   }
+    // }
   }
 
   componentWillMount () {
@@ -177,21 +175,6 @@ class PlaygroundView extends React.Component<Props, State> {
       tracker.track(ConsoleEvents.Playground.queryRan({type: 'Fail'}))
     }
     if (response.ok && !graphQLParams.query.includes('IntrospectionQuery')) {
-      if (this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART1')) {
-        const { query } = graphQLParams
-        if (query.includes('allPosts') && query.includes('imageUrl') && query.includes('description')) {
-          this.props.nextStep()
-        }
-      }
-
-      if (this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2')) {
-        const { query } = graphQLParams
-        if (query.includes('allPosts') && query.includes('filter') &&
-          query.includes('description_contains')) {
-          this.props.nextStep()
-        }
-      }
-
       tracker.track(ConsoleEvents.Playground.queryRan({type: 'Success'}))
     }
 
@@ -203,81 +186,28 @@ class PlaygroundView extends React.Component<Props, State> {
 
   render () {
 
+    const {project} = this.props.viewer
+    const subscriptionsEndpoint = getSubscriptionEndpoint(project.region)
+    const step = this.props.gettingStartedState.skipped ? undefined : this.props.gettingStartedState.step
+
     return (
       <div className={classes.root}>
         <Helmet title='Playground' />
+        <style jsx={true}>{`
+          div :global(.onboarding-hint) {
+            @p: .pa0, .bgNone;
+          }
+        `}</style>
         <Playground
           adminAuthToken={this.state.adminToken}
           projectId={this.props.viewer.project.id}
           onSuccess={this.handleResponse}
           httpApiPrefix={__BACKEND_ADDR__}
-          wsApiPrefix={__BACKEND_WS_ADDR__ + '/v1'}
+          wsApiPrefix={subscriptionsEndpoint + '/v1'}
+          onboardingStep={step}
+          tether={Tether}
+          nextStep={this.props.nextStep}
         />
-        {this.props.gettingStartedState.isCurrentStep('STEP4_CLICK_BEGIN_PART1') &&
-          <PopupWrapper blur={true}>
-            <PlaygroundAPopup />
-          </PopupWrapper>
-        }
-        {(this.props.gettingStartedState.isCurrentStep('STEP4_CLICK_TEASER_PART2') ||
-          this.props.gettingStartedState.isCurrentStep('STEP4_CLICK_BEGIN_PART2')) &&
-          <PopupWrapper>
-            <PlaygroundBPopup />
-          </PopupWrapper>
-        }
-        {this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART1') && (
-          <div
-            className={cx(
-              $p.flex,
-              $p.justifyCenter,
-              $p.itemsCenter,
-              $p.absolute,
-              $p.bottom0,
-              $p.pa25,
-              $p.left0,
-              $p.right0,
-              $p.z3,
-              $p.pointer,
-            )}
-            onClick={this.props.previousStep}
-          >
-            <div className='mw6 bg-accent br-2 tl shadow-2'>
-              <div className='w-100 pa-16 white fw8' style={{backgroundColor: '#00A854'}}>
-                Query all posts with the imageUrl and description
-              </div>
-              <div className='w-100 pa-16 black-50 lh-1-4'>
-                If you're stuck, try the auto completion or look into the docs to get an overview.
-                If that doesn't help, try the chat.
-              </div>
-            </div>
-          </div>
-        )}
-        {this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2') && (
-          <div
-            className={cx(
-              $p.flex,
-              $p.justifyCenter,
-              $p.itemsCenter,
-              $p.absolute,
-              $p.bottom0,
-              $p.pa25,
-              $p.left0,
-              $p.right0,
-              $p.z3,
-              $p.pointer,
-            )}
-            onClick={this.props.previousStep}
-          >
-            <div className='mw6 bg-accent br-2 tl shadow-2'>
-              <div className='w-100 pa-16 white fw8' style={{ backgroundColor: '#00A854' }}>
-                Query all posts that contain the #graphcool hashtag in their description.
-              </div>
-              <div className='w-100 pa-16 black-50 lh-1-4'>
-                Use the built-in filter "description_contains".{' '}
-                If you need more information, look in the docs section or open up the chat!
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     )
   }
@@ -305,6 +235,7 @@ export default Relay.createContainer(MappedPlaygroundView, {
       fragment on Viewer {
         project: projectByName(projectName: $projectName) {
           id
+          region
         }
         userModel: modelByName(projectName: $projectName, modelName: "User"){
           id

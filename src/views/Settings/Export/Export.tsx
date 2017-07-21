@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as FileSaver from 'file-saver'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Viewer} from '../../../types/types'
 import * as cookiestore from 'cookiestore'
 import {Lokka} from 'lokka'

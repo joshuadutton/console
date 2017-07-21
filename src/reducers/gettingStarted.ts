@@ -22,7 +22,7 @@ export function reduceGettingStartedState(state: GettingStartedReducerState = in
       // TODO: use reselect for derived data
       return Object.assign({}, state, {
         gettingStartedState,
-        poll: gettingStartedState.isCurrentStep('STEP5_WAITING'),
+        poll: gettingStartedState.isCurrentStep('STEP5_SELECT_EXAMPLE'),
       })
     default:
       return state

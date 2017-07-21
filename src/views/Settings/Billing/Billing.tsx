@@ -3,10 +3,12 @@ import CurrentPlan from './CurrentPlan'
 import Usage from './Usage'
 import CreditCardInformation from './CreditCardInformation'
 import {chunk, mmDDyyyyFromTimestamp} from '../../../utils/utils'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Viewer, Invoice} from '../../../types/types'
-import {creditCardNumberValid, expirationDateValid, cpcValid,
-  minCPCDigits, minCreditCardDigits, maxCPCDigits, maxCreditCardDigits} from '../../../utils/creditCardValidator'
+import {
+  creditCardNumberValid, expirationDateValid, cpcValid,
+  minCPCDigits, minCreditCardDigits, maxCPCDigits, maxCreditCardDigits,
+} from '../../../utils/creditCardValidator'
 import SetCreditCardMutation from '../../../mutations/SetCreditCardMutation'
 import Loading from '../../../components/Loading/Loading'
 import {ShowNotificationCallback} from '../../../types/utils'
@@ -78,33 +80,63 @@ class Billing extends React.Component<Props, State> {
     }
   }
 
-  render() {
-
-    const crmProjectsAvailable = Boolean(this.props.viewer.crm) && Boolean(this.props.viewer.crm.crm) &&
-      Boolean(this.props.viewer.crm.crm.customer) && Boolean(this.props.viewer.crm.crm.customer.projects)
-
-    if (!crmProjectsAvailable) {
-      return (
-        <div className='flex flexColumn itemsCenter justifyCenter ph96 tc size black50'>
-          <style jsx={true}>{`
+  renderSyncNotice() {
+    return (
+      <div className='flex flexColumn itemsCenter justifyCenter ph96 tc size black50'>
+        <style jsx={true}>{`
             .size {
               height: 350px;
               width: 700px;
             }
           `}</style>
-          <div>
-            We're currently synchronizing your project data.
-            Please wait a little bit until Billing is available here.
-          </div>
-          <div className='mt16'>
-            If you have a question, please contact our support team! 👋
-          </div>
+        <div>
+          We're currently synchronizing your project data.
+          Please wait a little bit until Billing is available here.
         </div>
-      )
+        <div className='mt16'>
+          If you have a question, please contact our support team! 👋
+        </div>
+      </div>
+    )
+  }
+
+  renderNeedOwnerShipNotice() {
+    const owner = this.props.viewer.project.seats.edges.find(seat => seat.node.isOwner).node
+    return (
+      <div className='flex flexColumn itemsCenter justifyCenter ph96 tc size black50'>
+        <style jsx={true}>{`
+            .size {
+              height: 350px;
+              width: 700px;
+            }
+          `}</style>
+        <div>
+          You are not the owner of this project. If you have questions about the billing,
+          talk to <b>{owner.name}</b> (<b>{owner.email}</b>),
+          who is the owner of this project.
+        </div>
+      </div>
+    )
+  }
+
+  render() {
+
+    const crmProjectsAvailable = Boolean(this.props.viewer.crm) && Boolean(this.props.viewer.crm.crm) &&
+      Boolean(this.props.viewer.crm.crm.customer) && Boolean(this.props.viewer.crm.crm.customer.projects)
+
+    const ownerMail = this.props.viewer.project.seats.edges.find(seat => seat.node.isOwner).node.email
+    const isOwner = ownerMail === this.props.viewer.crm.email
+
+    if (!crmProjectsAvailable) {
+      if (isOwner) {
+        return this.renderSyncNotice()
+      } else {
+        return this.renderNeedOwnerShipNotice()
+      }
     }
 
     const projectNode = this.props.viewer.crm.crm.customer.projects.edges.find(edge => {
-      return edge.node.name === this.props.projectName
+      return edge.node.systemProjectId === this.props.viewer.project.id
     })
 
     let project = null
@@ -113,38 +145,25 @@ class Billing extends React.Component<Props, State> {
     }
 
     if (!Boolean(project)) {
-      return (
-        <div className='flex flexColumn itemsCenter justifyCenter ph96 tc size black50'>
-          <style jsx={true}>{`
-            .size {
-              height: 350px;
-              width: 700px;
-            }
-          `}</style>
-          <div>
-            We're currently synchronizing your project data.
-            Please wait a little bit until Billing is available here.
-          </div>
-          <div className='mt16'>
-            If you have a question, please contact our support team! 👋
-          </div>
-        </div>
-      )
+      if (isOwner) {
+        return this.renderSyncNotice()
+      } else {
+        return this.renderNeedOwnerShipNotice()
+      }
     }
 
-    const seats = this.props.viewer.project.seats.edges.map(edge => edge.node.name)
+    const seats = this.props.viewer.project.seats.edges.map(edge => edge.node)
 
     const invoices: Invoice[] = project.projectBillingInformation.invoices.edges.map(edge => edge.node)
     const currentInvoice = invoices[invoices.length - 1]
     const creditCard = project.projectBillingInformation.creditCard
-    const expirationYear = creditCard ? creditCard.expYear.toString().substr(2,2) : ''
+    const expirationYear = creditCard ? creditCard.expYear.toString().substr(2, 2) : ''
     const creditCardNumber = creditCard ? 'XXXX XXXX XXXX ' + creditCard.last4 : ''
     const expirationDate = creditCard ? creditCard.expMonth + '/' + expirationYear : ''
 
     return (
       <div className={`container ${this.state.isEditingCreditCardInfo && 'bottomPadding'}`}>
-        <style jsx={true}>{`
-
+        <style jsx>{`
           .container {
             @p: .br;
             max-width: 700px;
@@ -175,7 +194,7 @@ class Billing extends React.Component<Props, State> {
           usedSeats={seats}
           plan={project.projectBillingInformation.plan}
           lastInvoiceDate={mmDDyyyyFromTimestamp(currentInvoice.timestamp)}
-          currentNumberOfRequests={currentInvoice.usageRequests.reduce((a,b) => a + b, 0)}
+          currentNumberOfRequests={currentInvoice.usageRequests.reduce((a, b) => a + b, 0)}
           usedStoragePerDay={currentInvoice.usageStorage}
           overageRequests={currentInvoice.overageRequests}
           overageStorage={currentInvoice.overageStorage}
@@ -213,7 +232,6 @@ class Billing extends React.Component<Props, State> {
             </div>
           )
         }
-
         {this.props.children}
       </div>
     )
@@ -290,10 +308,10 @@ class Billing extends React.Component<Props, State> {
   private validateAddressDetails = () => {
     const addressLine1Valid = this.state.newAddressLine1.length > 0
     const zipcodeValid = this.state.newZipCode.length > 0
-    const stateValid = this.state.newState.length > 0
+    // const stateValid = this.state.newState.length > 0
     const cityValid = this.state.newCity.length > 0
     const countryValid = this.state.newCountry.length > 0
-    const addressValid = addressLine1Valid && zipcodeValid && stateValid && cityValid && countryValid
+    const addressValid = addressLine1Valid && zipcodeValid && cityValid && countryValid
     this.setState({addressDataValid: addressValid} as State)
 
   }
@@ -354,9 +372,8 @@ class Billing extends React.Component<Props, State> {
     const expirationMonth = expirationDateComponents[0]
     const expirationYear = expirationDateComponents[1]
 
-    this.setState({isLoading: true} as State)
-
     if (this.state.creditCardDetailsValid && this.state.addressDataValid) {
+      this.setState({isLoading: true} as State)
       Stripe.card.createToken(
         {
           number: this.state.newCreditCardNumber,
@@ -430,6 +447,9 @@ export default Relay.createContainer(mappedBilling, {
           seats(first: 1000) {
             edges {
               node {
+                id
+                isOwner
+                email
                 name
               }
             }
@@ -437,13 +457,16 @@ export default Relay.createContainer(mappedBilling, {
         },
         crm: user {
           name
+          email
           crm {
             customer {
               id
               projects(first: 1000) {
                 edges {
                   node {
+                    id
                     name
+                    systemProjectId
                     projectBillingInformation {
                       plan
                       invoices(first: 1000)  {

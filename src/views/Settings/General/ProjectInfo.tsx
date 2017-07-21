@@ -1,6 +1,6 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
-import {withRouter} from 'react-router'
+import * as Relay from 'react-relay/classic'
+import {withRouter, Link} from 'react-router'
 import {Project} from '../../../types/types'
 import Icon from 'graphcool-styles/dist/components/Icon/Icon'
 import {$p} from 'graphcool-styles'
@@ -61,18 +61,18 @@ class ProjectInfo extends React.Component<Props, State> {
         <style jsx={true}>{`
 
           .inputField {
-            @inherit: .f25, .fw3, .w100, .pt6, .h100;
+            @p: .f25, .fw3, .w100, .pt6, .h100;
             max-width: 300px;
             color: rgba(42,127,211,1);
           }
 
           .saveButton {
-            @inherit: .ph10, .pv6, .fw6, .ttu, .f14, .buttonShadow, .pointer;
+            @p: .ph10, .pv6, .fw6, .ttu, .f14, .buttonShadow, .pointer;
             color: rgba(42,127,211,1);
           }
 
           .resetButton {
-            @inherit: .underline, .pl6, .f14, .fw6, .pointer;
+            @p: .underline, .pl6, .f14, .fw6, .pointer;
             color: rgba(241,143,1,1);
           }
 
@@ -99,6 +99,19 @@ class ProjectInfo extends React.Component<Props, State> {
             animation: movingCopyIndicator .7s linear;
           }
 
+          .actionRow {
+            @p: .flex, .justifyBetween, .itemsCenter, .pv25, .pr60;
+          }
+
+          .actionButton {
+            @p: .pv10, .ph16, .f16, .nowrap, .br2, .pointer, .mr16;
+          }
+          .actionButton.white {
+            @p: .darkBlue70, .bgDarkBlue10;
+          }
+          .actionButton.white:hover {
+            @p: .bgDarkBlue20;
+          }
         `}</style>
 
         {this.state.isEnteringProjectName ?
@@ -284,6 +297,17 @@ class ProjectInfo extends React.Component<Props, State> {
 
             )
           }
+          <div className='actionRow'>
+            <div>
+              <div className='fw3 f25 deleteRed100'>
+                Clone this Project</div>
+            </div>
+            <Link to={`/${this.props.project.name}/clone`}>
+              <div className='actionButton white'>
+                Clone Project
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
     )

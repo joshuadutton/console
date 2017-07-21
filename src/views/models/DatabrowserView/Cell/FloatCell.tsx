@@ -44,8 +44,17 @@ export default class FloatCell extends React.Component<CellProps<number>, CellSt
         ref='input'
         value={this.state.valueString}
         onBlur={(e: any) => this.props.save(stringToValue(e.target.value, this.props.field))}
-        onKeyDown={this.props.onKeyDown}
+        onKeyDown={this.handleKeyDown}
         onChange={this.handleChange}
-      />)
+        placeholder='Enter a Float...'
+      />
+    )
+  }
+
+  private handleKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      this.props.save(stringToValue(e.target.value, this.props.field))
+    }
+    this.props.onKeyDown(e)
   }
 }

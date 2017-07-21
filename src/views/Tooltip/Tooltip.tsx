@@ -10,7 +10,7 @@ const Overlay = styled.span`
   overflow: visible;
   font-size: ${$v.size12};
   padding: ${$v.size10};
-  
+
   &:before {
     content: "";
     position: absolute;
@@ -23,7 +23,7 @@ const Overlay = styled.span`
     border-width: 0 6px 6px 6px;
     border-color: transparent transparent ${$v.white} transparent;
   }
-  
+
   @media (min-width: 750px) {
     font-size: ${$v.size14};
     padding: ${$v.size16};

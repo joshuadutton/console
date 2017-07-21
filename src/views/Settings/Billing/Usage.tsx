@@ -1,16 +1,16 @@
 import * as React from 'react'
 import RequestUsageIndicator from './RequestUsageIndicator'
-import UsedSeats from './Seats'
+import Seats from './Seats'
 import NodeUsageIndicator from './NodeUsageIndicator'
 import {$v} from 'graphcool-styles'
 import {billingInfo} from './billing_info'
-import {PricingPlan} from '../../../types/types'
+import { PricingPlan, Seat } from '../../../types/types'
 import {todayString} from '../../../utils/utils'
 
 interface Props {
   plan: PricingPlan
 
-  usedSeats: string[]
+  usedSeats: Seat[]
 
   lastInvoiceDate: string
 
@@ -68,7 +68,7 @@ export default class Usage extends React.Component<Props, {}> {
             Overage total <span className='blue fw6 ml6'>  + ${(this.calculateTotalOverageCosts()).toFixed(2)}</span>
           </div>
         </div>}
-        <UsedSeats
+        <Seats
           className={`mb38 ${this.calculateAdditionalCostsForRequests() > 0 ? 'mt25' : 'mt96'}`}
           seats={this.props.usedSeats}
           maxSeats={maxSeats}

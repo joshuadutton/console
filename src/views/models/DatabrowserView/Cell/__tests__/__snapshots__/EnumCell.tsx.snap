@@ -8,12 +8,7 @@ exports[`test EnumCell renders 1`] = `
       className="root"
       onKeyDown={[Function]}
       onSelect={[Function]}
-      options={
-        Array [
-          "asd",
-          "def",
-        ]
-      }
+      options={Array []}
       value="asd" />
   </div>
 </ClickOutside>

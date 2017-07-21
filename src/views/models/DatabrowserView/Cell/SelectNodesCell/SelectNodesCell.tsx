@@ -1,4 +1,5 @@
 import * as React from 'react'
+import * as cookiestore from 'cookiestore'
 import * as fetch from 'isomorphic-fetch'
 import * as Modal from 'react-modal'
 import {Icon, $v} from 'graphcool-styles'
@@ -7,7 +8,7 @@ import SearchBox from './SearchBox'
 import * as Immutable from 'seamless-immutable'
 import modalStyle from '../../../../../utils/modalStyle'
 import {Model, Field} from '../../../../../types/types'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import * as mapProps from 'map-props'
 import {isScalar} from '../../../../../utils/graphql'
 import TypeTag from '../../../../SchemaView/SchemaOverview/TypeTag'
@@ -22,26 +23,29 @@ interface State {
   query: string
   scrollToIndex?: number
   selectedTabIndex: number
+  adminAuthToken: string
   values: string[] | null
+  changed: boolean
 }
 
 interface Props {
   field: Field
+  nodeId?: string
   projectId: string
   model: Model
   fields: Field[]
-  values: string[] | null
   multiSelect: boolean
   save: (values: string[] | string) => void
   cancel: () => void
   endpointUrl: string
-  adminAuthToken: string
 }
 
 class SelectNodesCell extends React.Component<Props, State> {
 
   private style: any
   private lastQuery: string
+
+  private firstQuery = true
 
   constructor(props) {
     super(props)
@@ -53,15 +57,17 @@ class SelectNodesCell extends React.Component<Props, State> {
       query: '',
       count: 0,
       scrollToIndex: undefined,
-      selectedTabIndex: 0,
-      values: props.values ? props.values.map(item => item.id) : props.values,
+      selectedTabIndex: 1,
+      values: null,
+      adminAuthToken: cookiestore.has('graphcool_auth_token') && cookiestore.get('graphcool_auth_token'),
+      changed: false,
     }
 
     this.getItems({startIndex: 0, stopIndex: 50}, props.fields)
 
     this.style = Object.assign({}, modalStyle, {
       overlay: Object.assign({}, modalStyle.overlay, {
-        backgroundColor: 'transparent',
+        backgroundColor: 'rgba(255,255,255,.4)',
       }),
       content: Object.assign({}, modalStyle.content, {
         width: 'auto',
@@ -181,6 +187,9 @@ class SelectNodesCell extends React.Component<Props, State> {
             onSetNull={this.handleSetNull}
             onCancel={this.props.cancel}
             onSave={this.save}
+            field={this.props.field}
+            changed={this.state.changed}
+            values={this.state.values}
           />
         </div>
       </Modal>
@@ -213,6 +222,7 @@ class SelectNodesCell extends React.Component<Props, State> {
   private handleSetNull = () => {
     this.setState(state => {
 
+      const values = this.props.field.isList ? [] : null
       return {
         ...state,
         items: state.items.map(item => {
@@ -221,7 +231,8 @@ class SelectNodesCell extends React.Component<Props, State> {
             selected: false,
           }
         }),
-        values: null,
+        values,
+        changed: true,
       }
     })
   }
@@ -241,7 +252,7 @@ class SelectNodesCell extends React.Component<Props, State> {
       const newValue = !items[index].selected
       items = Immutable.setIn(items, [index, 'selected'], newValue)
 
-      let newValues = (values && multiSelect) ? values.slice() : []
+      let newValues = values ? values.slice() : []
       // either remove or add the id to the list of values
       if (newValues.includes(row.id)) {
         const i = newValues.indexOf(row.id)
@@ -255,6 +266,7 @@ class SelectNodesCell extends React.Component<Props, State> {
         values: newValues,
         items,
         selectedRowIndex: index,
+        changed: true,
       }
     })
   }
@@ -283,6 +295,7 @@ class SelectNodesCell extends React.Component<Props, State> {
     const {query, selectedTabIndex} = this.state
     const tab = tabs[selectedTabIndex]
     const fields = customFields || this.props.fields
+    let {firstQuery} = this
 
     if (fields.length === 0) {
       return
@@ -290,11 +303,11 @@ class SelectNodesCell extends React.Component<Props, State> {
 
     let filter = ''
     // either there must be a search query or the tab unequal all
-    if ((query && query.length > 0) || tab !== 'all') {
+    if (!firstQuery && ((query && query.length > 0) || tab !== 'all')) {
       filter = ' filter: {'
       if (query && query.length) {
         filter += 'OR: ['
-        const whiteList = ['GraphQLID', 'String', 'Enum']
+        const whiteList = ['GraphQLID', 'String']
 
         const filtered = fields.filter((field: Field) => {
           return whiteList.indexOf(field.typeIdentifier.toString()) > -1
@@ -307,22 +320,31 @@ class SelectNodesCell extends React.Component<Props, State> {
 
       if (tab !== 'all') {
         const {values} = this.state
-        const related = tab === 'related' ? '' : '_not'
-        filter += `id${related}_in: [${values ? values.map(value => `"${value}"`).join(',') : ''}]`
+        const not = tab === 'unrelated' ? '_not' : ''
+        filter += `id${not}_in: [${values ? values.map(value => `"${value}"`).join(',') : ''}]`
       }
 
       filter += '}'
     }
 
-    const count = stopIndex - startIndex
+    const {nodeId, field} = this.props
+    const getRelated = firstQuery
+    const count = stopIndex - startIndex + 1
+    const nodeSelector = getRelated ? `${field.model.name}(id: "${nodeId}") {` : ''
+    const metaQuery = (!firstQuery || field.isList) ? `${this.getAllNameMeta()}${filter ? `(${filter})` : ''} {
+          count
+        }` : ''
+    const queryParams = (!firstQuery || field.isList) ? `(skip: ${startIndex} first: ${count}${filter})` : ''
+
+    // continue: remove query arguments for single relation
     const itemsQuery = `
       {
-        ${this.getAllNameMeta()}${filter ? `(${filter})` : ''} {
-          count
-        }
-        ${this.getAllName()}(skip: ${startIndex} first: ${count}${filter}){
+        ${nodeSelector}
+        ${metaQuery}
+        ${this.getAllName()}${queryParams}{
           ${fields.map(f => f.name + (isScalar(f.typeIdentifier) ? '' : ' {id} ')).join('\n')}
         }
+        ${getRelated ? '}' : ''}
       }
     `
 
@@ -332,7 +354,7 @@ class SelectNodesCell extends React.Component<Props, State> {
         method: 'post',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.props.adminAuthToken}`,
+          'Authorization': `Bearer ${this.state.adminAuthToken}`,
           'X-GraphCool-Source': 'playground',
         },
         body: JSON.stringify({query: itemsQuery}),
@@ -341,10 +363,27 @@ class SelectNodesCell extends React.Component<Props, State> {
       .then(res => res.json())
       .then(res => {
 
-        const meta = res.data[this.getAllNameMeta()]
-        const newItems = res.data[this.getAllName()]
+        let pointer = res.data
+
+        if (getRelated) {
+          pointer = pointer[field.model.name]
+        }
+
+        let meta
+        let newItems
+        if (!firstQuery || field.isList) {
+          meta = pointer[this.getAllNameMeta()]
+          newItems = pointer[this.getAllName()]
+        } else {
+          newItems = pointer[field.name] ? [pointer[field.name]] : []
+          meta = {count: newItems.length}
+        }
 
         let {items, values} = this.state
+
+        if (firstQuery) {
+          values = newItems.map(item => item.id)
+        }
 
         // reset data if search changed
         if (query !== this.lastQuery) {
@@ -360,7 +399,15 @@ class SelectNodesCell extends React.Component<Props, State> {
 
         let newState = {
           items,
+          values,
           count: meta.count,
+        }
+
+        let goingforAll = false
+        if (this.firstQuery && meta.count === 0) {
+          newState['selectedTabIndex'] = 0
+          this.firstQuery = false
+          goingforAll = true
         }
 
         if (this.lastQuery !== this.state.query) {
@@ -377,14 +424,25 @@ class SelectNodesCell extends React.Component<Props, State> {
           )
         }
 
-        this.setState(newState as State)
+        this.setState(
+          newState as State,
+          () => {
+            if (goingforAll) {
+              this.getItemsFromState()
+            }
+          },
+        )
 
         this.lastQuery = query
+        this.firstQuery = false
       })
       .catch(e => console.error(e))
   }
 
   private getAllName() {
+    if (this.props.nodeId && this.state.selectedTabIndex === 1 && this.firstQuery) {
+      return this.props.field.name
+    }
     return `all${this.props.model.namePlural}`
   }
 

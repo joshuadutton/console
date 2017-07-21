@@ -2,8 +2,9 @@ import * as React from 'react'
 import Icon from 'graphcool-styles/dist/components/Icon/Icon'
 import {CellRequirements, getScalarEditCell, getEditCell} from '../DatabrowserView/Cell/cellgenerator'
 import {TypedValue} from '../../../types/utils'
-import {Field} from '../../../types/types'
+import { Enum, Field } from '../../../types/types'
 import {valueToString} from '../../../utils/valueparser'
+import * as cn from 'classnames'
 
 interface State {
   isEnteringValue: boolean
@@ -16,6 +17,8 @@ interface Props {
   projectId: string
   field: Field
   placeholder?: string
+  optional: boolean
+  enums: Enum[]
 }
 
 export default class EditValueInput extends React.Component<Props, State> {
@@ -28,21 +31,26 @@ export default class EditValueInput extends React.Component<Props, State> {
   render() {
 
     const {isEnteringValue} = this.state
-    const {value, placeholder, field} = this.props
+    const {value, placeholder, field, optional} = this.props
 
     return (
       <div className='container'>
         <style jsx={true}>{`
 
           .container {
-            @p: .bgWhite;
+            @p: .bgWhite, .flex, .justifyCenter;
           }
           .edit-value {
-            @p: .flex, .justifyCenter;
-            height: 26px;
+            @p: .flex, .justifyCenter, .ph10;
+            width: auto;
+            height: auto;
+            min-height: 52px;
           }
-          .relative-box {
-            @p: .relative;
+          .edit-value.entering {
+            @p: .bBlue, .ba, .br2;
+          }
+          .edit-value.entering :global(input) {
+            padding: 15px 20px;
           }
         `}</style>
         <style jsx global>{`
@@ -52,11 +60,14 @@ export default class EditValueInput extends React.Component<Props, State> {
           .field-popup .edit-value > div > div > div:nth-of-type(2) {
             border: none !important;
           }
+          .field-popup .edit-value > div > div:nth-child(2) {
+            left: -56px;
+          }
         `}</style>
         {isEnteringValue ?
           (
-            <div className='edit-value'>
-              <div className='relative-box'>
+            <div className='relative'>
+              <div className={cn('edit-value', {entering: isEnteringValue})}>
                 {this.getInput()}
               </div>
             </div>
@@ -76,14 +87,16 @@ export default class EditValueInput extends React.Component<Props, State> {
               />
               <div className='f16 black40 ml16'>
                 {placeholder || 'add value'}
-                <span className='black30'> (optional)</span>
+                {optional && (
+                  <span className='black30'> (optional)</span>
+                )}
               </div>
             </div>
           ) : (
             <div
               className='flex itemsCenter pointer bbox edit-value '
               onMouseEnter={() => this.setState({isHoveringValue: true} as State)}
-              onMouseLeave={() => this.setState({isHoveringValue: false} as State)}
+              onMouseLeave={() => this.setState({isHoveringValue: true} as State)}
               onClick={() => this.setState({
                 isEnteringValue: true,
                 isHoveringValue: false,
@@ -119,7 +132,7 @@ export default class EditValueInput extends React.Component<Props, State> {
       value,
       field: {
         ...this.props.field,
-        isRequired: false, // always show `null`, as it must be possible to remove the default value
+        isRequired: !this.props.optional,
       },
       inList: true,
       projectId: this.props.projectId,
@@ -131,10 +144,15 @@ export default class EditValueInput extends React.Component<Props, State> {
         cancel: () => {
           this.setState({isEnteringValue: false} as State)
         },
-        onKeyDown: () => {
+        onKeyDown: (e: any) => {
+          if (['String'].includes(this.props.field.typeIdentifier) && e.keyCode === 13) {
+            this.setState({isEnteringValue: false} as State)
+            this.props.onChangeValue(e.target.value)
+          }
           // on key down...
         },
       },
+      enums: this.props.enums,
     }
 
     return getEditCell(requirements)

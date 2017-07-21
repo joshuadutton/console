@@ -6,9 +6,10 @@ import {$p, Icon} from 'graphcool-styles'
 
 interface Integration {
   isEnabled: boolean,
-  logoURI: string,
+  logoURI?: string,
   description: string
   link: string
+  logo?: any
 }
 
 interface Props {
@@ -67,7 +68,11 @@ export default class IntegrationsCard extends React.Component<Props, {}> {
           )}
         >
           <div>
-            <Logo src={integration.logoURI} alt='integration-logo' />
+            {integration.logo ? (
+              integration.logo
+            ) : (
+              <Logo src={integration.logoURI} alt='integration-logo' />
+            )}
           </div>
           <div className={cx($p.black50, $p.mt16)}>
             {integration.description}

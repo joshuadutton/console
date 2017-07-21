@@ -22,6 +22,9 @@ export default class NodeUsageIndicator extends React.Component<Props, {}> {
     const maxStorageString = maxMB >= 1000 ? (maxMB / 1000) + ' GB' : maxMB + ' MB'
     const maxString = '/ ' + maxStorageString + ' Database (Date: ' + today + ')'
     const color = this.barColor(1)
+    let usageMB: number | string = this.props.usedStoragePerDay[this.props.usedStoragePerDay.length - 1]
+    usageMB = (usageMB && !isNaN(usageMB)) ? usageMB.toFixed(1) : 0
+
     return (
       <div className='flex flexColumn'>
         <div className='columns'>
@@ -74,12 +77,13 @@ export default class NodeUsageIndicator extends React.Component<Props, {}> {
             />
             <div
               className={`ml6 f14 fw6`}
-              style={{color: color}}
-            >{this.props.usedStoragePerDay[this.props.usedStoragePerDay.length - 1]} MB</div>
+              style={{color}}
+            >{usageMB} MB</div>
             <div className='ml6 black50 f14'>{maxString}</div>
           </div>
           {this.props.additionalCosts > 0 &&
-          <div className='f14 fw6 blue'>{'+ $' + this.props.additionalCosts.toFixed(2)}</div>}
+            <div className='f14 fw6 blue'>{'+ $' + this.props.additionalCosts.toFixed(2)}</div>
+          }
         </div>
       </div>
     )

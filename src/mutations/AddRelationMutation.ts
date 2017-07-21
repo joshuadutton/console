@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 
 interface Props {
   projectId: string
@@ -10,6 +10,8 @@ interface Props {
   fieldOnRightModelName: string
   fieldOnLeftModelIsList: boolean
   fieldOnRightModelIsList: boolean
+  fieldOnLeftModelIsRequired: boolean
+  fieldOnRightModelIsRequired: boolean
 }
 
 export default class AddRelationMutation extends Relay.Mutation<Props, {}> {

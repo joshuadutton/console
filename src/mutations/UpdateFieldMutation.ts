@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 
 export interface UpdateFieldProps {
   id: string
@@ -12,6 +12,7 @@ export interface UpdateFieldProps {
   relationId?: string
   migrationValue?: string
   description?: string
+  enumId?: string
 }
 
 export default class UpdateFieldMutation extends Relay.Mutation<UpdateFieldProps, {}> {
@@ -50,6 +51,7 @@ export default class UpdateFieldMutation extends Relay.Mutation<UpdateFieldProps
       relationId: this.props.relationId,
       migrationValue: this.props.migrationValue,
       description: this.props.description,
+      enumId: this.props.enumId,
     }
   }
 
@@ -65,6 +67,7 @@ export default class UpdateFieldMutation extends Relay.Mutation<UpdateFieldProps
         isUnique: this.props.isUnique,
         defaultValue: this.props.defaultValue,
         description: this.props.description || null,
+        enumId: this.props.enumId,
       },
     }
   }

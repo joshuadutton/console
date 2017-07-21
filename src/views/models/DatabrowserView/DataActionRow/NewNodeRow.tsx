@@ -40,6 +40,7 @@ class NewNodeRow extends React.Component<Props, State> {
             cancel={this.props.hideNewRow}
             width={this.props.width}
             updateCalled={this.props.updateCalled}
+            project={this.props.project}
           />
         )
     }

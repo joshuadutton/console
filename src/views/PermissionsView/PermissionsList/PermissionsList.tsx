@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Model} from '../../../types/types'
 import mapProps from '../../../components/MapProps/MapProps'
 import ModelPermissions from './ModelPermissions/ModelPermissions'
@@ -30,6 +30,7 @@ class PermissionsList extends React.Component<Props, {}> {
               }
             />,
           )}
+          {this.props.children}
         </div>
     )
   }

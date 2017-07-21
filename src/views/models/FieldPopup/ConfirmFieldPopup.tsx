@@ -56,8 +56,6 @@ export default class ConfirmFieldPopup extends React.Component<Props, State> {
         fieldAndMutationNameWillChange = true
       }
 
-      enumValueRemoved = valuesMissing(initialField.enumValues, mutatedField.enumValues)
-
       uniqueRemoved = initialField.isUnique && !mutatedField.isUnique
 
       willBeList = !initialField.isList && mutatedField.isList
@@ -68,7 +66,6 @@ export default class ConfirmFieldPopup extends React.Component<Props, State> {
     defaultValue = !(
       allWillBeReplaced ||
       fieldAndMutationNameWillChange ||
-      enumValueRemoved ||
       uniqueRemoved ||
       willBeList ||
       willBeScalar
@@ -139,11 +136,6 @@ export default class ConfirmFieldPopup extends React.Component<Props, State> {
           {fieldAndMutationNameWillChange && (
             <div>
               Your changes will break the schema containing your field <b>{this.props.fieldName}</b>.
-            </div>
-          )}
-          {enumValueRemoved && (
-            <div>
-              Note that you removed enum values, which could be used in Nodes currently.
             </div>
           )}
           {uniqueRemoved && (

@@ -77,6 +77,12 @@ export function reloadDataAsync(lokka: any,
 
 let lastModelNamePlural = null
 
+function cleanServerData(node, fields) {
+  fields.filter((field) => isNonScalarList(field))
+    .forEach(({name}) => node[name] = node[name].edges.map(({node}) => node))
+  return node
+}
+
 export function loadDataAsync(lokka: any,
                               modelNamePlural: string,
                               fields: Field[],
@@ -97,9 +103,7 @@ export function loadDataAsync(lokka: any,
           .edges.map(({node}) => {
             // Transforms the relay query into something that the valueparser understands
             // Previously we used the simple API that's why this is necessary
-            fields.filter((field) => isNonScalarList(field))
-              .forEach(({name}) => node[name] = node[name].edges.map(({node}) => node))
-            return node
+            return cleanServerData(node, fields)
           }).map(Immutable.Map)
 
         let nodes = data.nodes
@@ -147,22 +151,24 @@ export function addNodeAsync(lokka: any, model: Model, fields: Field[], fieldVal
 
     return addRelayNode(lokka, model.name, fieldValues, fields)
       .then(res => {
-        const node = res[`create${model.name}`][lowercaseFirstLetter(model.name)]
+        let node = res[`create${model.name}`][lowercaseFirstLetter(model.name)]
+        node = cleanServerData(node, fields)
         dispatch(addNodeSuccess(Immutable.Map<string,any>(node)))
         dispatch(mutationSuccess())
 
-        const {gettingStartedState} = getState().gettingStarted
-        if (model.name === 'Post' && (
-            gettingStartedState.isCurrentStep('STEP3_CLICK_ENTER_DESCRIPTION') ||
-            gettingStartedState.isCurrentStep('STEP3_CLICK_ADD_NODE1') ||
-            gettingStartedState.isCurrentStep('STEP3_CLICK_SAVE_NODE1') ||
-            gettingStartedState.isCurrentStep('STEP3_CLICK_ADD_NODE2')
-          )) {
-          dispatch(showDonePopup())
-          dispatch(nextStep())
-        }
+        // const {gettingStartedState} = getState().gettingStarted
+        // if (model.name === 'Post' && (
+        //     gettingStartedState.isCurrentStep('STEP3_CLICK_ENTER_DESCRIPTION') ||
+        //     gettingStartedState.isCurrentStep('STEP3_CLICK_ADD_NODE1') ||
+        //     gettingStartedState.isCurrentStep('STEP3_CLICK_SAVE_NODE1') ||
+        //     gettingStartedState.isCurrentStep('STEP3_CLICK_ADD_NODE2')
+        //   )) {
+        //   dispatch(showDonePopup())
+        //   dispatch(nextStep())
+        // }
       })
       .catch((err) => {
+        console.error(err)
         dispatch(mutationError())
         dispatch(decreaseCountChange(model.id))
         if (err.rawError) {
@@ -185,7 +191,6 @@ export function updateNodeAsync(lokka: any,
     if (field.isReadonly) {
       return Promise.reject({})
     }
-
     dispatch(mutationRequest())
 
     // if relation to self
@@ -222,7 +227,6 @@ export function updateNodeAsync(lokka: any,
       },
       value,
     }))
-
     return updateRelayNode(lokka, model.name, value, field, nodeId)
       .then((res) => {
         dispatch(mutationSuccess())

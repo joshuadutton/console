@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {withRouter} from 'react-router'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import {Viewer, Project} from '../../types/types'

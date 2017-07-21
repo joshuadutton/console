@@ -12,6 +12,7 @@ export default class JsonCell extends React.Component<CellProps<string>, {}> {
         defaultValue={valueToString(this.props.value, this.props.field, false)}
         onKeyDown={this.onKeyDown}
         onBlur={(e: any) => this.props.save(stringToValue(e.target.value, this.props.field))}
+        className='mono'
       />
     )
   }

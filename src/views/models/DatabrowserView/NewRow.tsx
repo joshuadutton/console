@@ -1,29 +1,29 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
-import {connect} from 'react-redux'
-import {bindActionCreators} from 'redux'
-import {nextStep} from '../../../actions/gettingStarted'
-import {GettingStartedState} from '../../../types/gettingStarted'
-import {StateTree, ReduxAction} from '../../../types/reducers'
+import * as Relay from 'react-relay/classic'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import { nextStep } from '../../../actions/gettingStarted'
+import { GettingStartedState } from '../../../types/gettingStarted'
+import { StateTree, ReduxAction } from '../../../types/reducers'
 import Cell from './Cell'
-import {TypedValue} from '../../../types/utils'
-import {Model, Field, TetherStep} from '../../../types/types'
-import {getFirstInputFieldIndex, getDefaultFieldValues} from '../utils'
-import {Icon} from 'graphcool-styles'
-import {classnames} from '../../../utils/classnames'
+import { TypedValue } from '../../../types/utils'
+import { Model, Field, TetherStep, Project } from '../../../types/types'
+import { getFirstInputFieldIndex, getDefaultFieldValues } from '../utils'
+import { Icon } from 'graphcool-styles'
+import { classnames } from '../../../utils/classnames'
 import * as Immutable from 'immutable'
 const classes: any = require('./NewRow.scss')
 import Tether from '../../../components/Tether/Tether'
-import {nextCell} from '../../../actions/databrowser/ui'
-import {GridPosition} from '../../../types/databrowser/ui'
+import { nextCell } from '../../../actions/databrowser/ui'
+import { GridPosition } from '../../../types/databrowser/ui'
 import tracker from '../../../utils/metrics'
-import {ConsoleEvents} from 'graphcool-metrics'
-import {idToBeginning} from '../../../utils/utils'
+import { ConsoleEvents } from 'graphcool-metrics'
+import { idToBeginning } from '../../../utils/utils'
 
 interface Props {
   model: Model
   projectId: string
-  columnWidths: {[key: string]: number}
+  columnWidths: { [key: string]: number }
   add: (fieldValues: { [key: string]: any }) => void
   cancel: (e: any) => void
   gettingStarted: GettingStartedState
@@ -35,6 +35,7 @@ interface Props {
   loaded: Immutable.List<boolean>
   writing: boolean
   updateCalled: () => void
+  project: Project
 }
 
 interface State {
@@ -43,11 +44,13 @@ interface State {
 }
 
 class NewRow extends React.Component<Props, State> {
-
   constructor(props) {
     super(props)
     this.state = {
-      fieldValues: getDefaultFieldValues(props.model.fields.edges.map((edge) => edge.node)),
+      fieldValues: getDefaultFieldValues(
+        props.model.fields.edges.map((edge) => edge.node),
+        props.project.enums.edges.map(edge => edge.node),
+      ),
       shouldFocus: true,
     }
   }
@@ -71,10 +74,12 @@ class NewRow extends React.Component<Props, State> {
   render() {
     const fields = this.getFields()
 
-      // .sort(compareFields) // TODO remove this once field ordering is implemented
+    // .sort(compareFields) // TODO remove this once field ordering is implemented
     const inputIndex = getFirstInputFieldIndex(fields)
     const loading = this.props.writing
-    const { step } = this.props.gettingStarted
+    const {step} = this.props.gettingStarted
+
+    console.log(this.props.project)
 
     return (
       <div
@@ -88,39 +93,9 @@ class NewRow extends React.Component<Props, State> {
         onKeyDown={this.keyDown}
       >
         {fields.map((field, index) => {
-          if (
-            (step === 'STEP3_CLICK_ENTER_IMAGEURL' && field.name === 'imageUrl') ||
-            (step === 'STEP3_CLICK_ENTER_DESCRIPTION' && field.name === 'description')
-          ) {
-            return (
-              <Tether
-                steps={[{
-                    step: 'STEP3_CLICK_ENTER_IMAGEURL',
-                    title: 'Enter an image url such as this one.',
-                    buttonText: 'Use example value',
-                    copyText: 'http://i.imgur.com/5ACuqm4.jpg',
-                  }, {
-                    step: 'STEP3_CLICK_ENTER_DESCRIPTION',
-                    title: 'Now enter a cool description.',
-                    description: `Please put "#graphcool" in the description.`, // tslint:disable-line
-                    buttonText: 'Use example value',
-                    copyText: '#graphcool',
-                  },
-                ]}
-                width={300}
-                offsetX={5}
-                offsetY={0}
-                zIndex={2000}
-                onClick={this.handleTetherClick}
-              >
-                {this.renderCell(field, index, inputIndex, fields)}
-              </Tether>
-              )
-          } else {
-            return (
-              this.renderCell(field, index, inputIndex, fields)
-            )
-          }
+          return (
+            this.renderCell(field, index, inputIndex, fields)
+          )
         })}
         <div
           className={classnames(classes.buttons, {
@@ -150,7 +125,7 @@ class NewRow extends React.Component<Props, State> {
             zIndex={2000}
             horizontal='right'
           >
-            <button onClick={this.add}>
+            <button onClick={this.add} data-test='add-node'>
               <Icon
                 width={24}
                 height={24}
@@ -168,6 +143,7 @@ class NewRow extends React.Component<Props, State> {
     <div
       key={field.id}
       style={{width: this.props.columnWidths[field.name]}}
+      data-test={`new-row-cell-${field.name}`}
     >
       <Cell
         needsFocus={this.state.shouldFocus ? index === inputIndex : false}
@@ -184,6 +160,7 @@ class NewRow extends React.Component<Props, State> {
         reload={() => null}
         rowIndex={-1}
         onChange={this.props.updateCalled}
+        enums={this.props.project.enums.edges.map(edge => edge.node)}
       />
     </div>
   )
@@ -202,38 +179,8 @@ class NewRow extends React.Component<Props, State> {
     }
   }
 
-  private handleTetherClick = (e: any, tether: TetherStep) => {
-    if (tether.step === 'STEP3_CLICK_ENTER_IMAGEURL') {
-      const fields = this.getFields()
-      const imageUrlField = fields.find(field => field.name === 'imageUrl')
-
-      this.update(tether.copyText as TypedValue, imageUrlField, () => {
-        this.props.nextCell(this.getFields())
-        this.props.nextStep()
-      })
-    }
-
-    if (tether.step === 'STEP3_CLICK_ENTER_DESCRIPTION') {
-      const fields = this.getFields()
-      const descriptionField = fields.find(field => field.name === 'description')
-
-      this.update(tether.copyText as TypedValue, descriptionField, () => {
-        setTimeout(
-          () => {
-            this.props.nextStep()
-          },
-          1000,
-        )
-      })
-    }
-  }
-
   private update = (value: TypedValue, field: Field, callback) => {
     this.props.updateCalled()
-    if (this.props.gettingStarted.isCurrentStep('STEP3_CLICK_ENTER_IMAGEURL') &&
-        field.name === 'imageUrl') {
-      this.props.nextStep()
-    }
 
     const {fieldValues} = this.state
     fieldValues[field.name].value = value
@@ -251,7 +198,7 @@ const mapStateToProps = (state: StateTree) => {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return bindActionCreators({ nextStep, nextCell }, dispatch)
+  return bindActionCreators({nextStep, nextCell}, dispatch)
 }
 
 const MappedNewRow = connect(mapStateToProps, mapDispatchToProps)(NewRow)
@@ -266,11 +213,27 @@ export default Relay.createContainer(MappedNewRow, {
               id
               name
               defaultValue
-              enumValues
               typeIdentifier
               isList
               isReadonly
+              enum {
+                id
+              }
               ${Cell.getFragment('field')}
+            }
+          }
+        }
+      }
+    `,
+    project: () => Relay.QL`
+      fragment on Project {
+        id
+        enums(first: 1000) {
+          edges {
+            node {
+              id
+              name
+              values
             }
           }
         }

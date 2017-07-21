@@ -15,3 +15,5 @@ lib
 .yarnclean
 .awcache
 dll
+.happypack
+test.tsx

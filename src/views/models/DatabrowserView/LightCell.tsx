@@ -14,10 +14,11 @@ interface Props {
   field: Field
   rowSelected?: boolean
   rowHasCursor?: boolean
+  [key: string]: any
 }
 export class LightCell extends React.PureComponent<Props, {}> {
   render() {
-    const {onClick, onDoubleClick, value, field, rowSelected, rowHasCursor} = this.props
+    const {onClick, onDoubleClick, value, field, rowSelected, rowHasCursor, ...rest} = this.props
     const valueString = valueToString(value, field, true)
 
     return (
@@ -36,8 +37,10 @@ export class LightCell extends React.PureComponent<Props, {}> {
             [$p.bgWhite]: (!rowHasCursor && !rowSelected),
             [$p.bgBlue]: rowSelected,
             [$p.white]: rowSelected,
+            [$p.mono]: field.typeIdentifier === 'Json',
           },
         )}
+        {...rest}
       >
         <div className={cx(classes.border, $p.flexAuto)}>
           <div className={classes.value}>

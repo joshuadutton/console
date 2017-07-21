@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Step} from '../types/gettingStarted'
 import {Example} from '../types/types'
 
@@ -27,7 +27,6 @@ export default class UpdateCustomerOnboardingStatusMutation extends Relay.Mutati
           systemBridge
           gettingStartedSkipped
           gettingStartedCompleted
-          
         }
       }
     `

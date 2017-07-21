@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as Immutable from 'immutable'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {withRouter, Link} from 'react-router'
 import {connect} from 'react-redux'
 import cuid from 'cuid'
@@ -168,7 +168,9 @@ export class SideNav extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {isBetaCustomer, project, expanded} = this.props
+    const {isBetaCustomer, project, expanded, viewer} = this.props
+    const lastMutationCallbackUsers = new Date('2017-06-09T00:00:00.000Z').getTime()
+    const showMutationCallbacks = new Date(viewer.user.createdAt).getTime() < lastMutationCallbackUsers
     return (
       <div
         className='side-nav'
@@ -188,25 +190,31 @@ export class SideNav extends React.PureComponent<Props, State> {
             @p: .w100, .flexFixed, .bgDarkBlue, .flex, .itemsCenter, .justifyBetween, .white60;
             height: 70px;
           }
+          .f {
+            @p: .ttl, .f20, .tc;
+            font-family: fantasy;
+            line-height: 1;
+            width: 24px;
+          }
         `}</style>
         <div className={cx('scrollable', $p.h100, {thin: !expanded})} style={{ paddingBottom: '70px' }}>
           <SideNavElement
             link={`/${project.name}/schema`}
             iconSrc={require('assets/icons/schema.svg')}
             text='Schema'
-            size={24}
-            active={location.pathname.includes(`${this.props.params.projectName}/schema`)}
+            size={18}
+            active={this.props.location.pathname.includes(`/schema`) && this.props.params.projectName}
             small={!this.props.expanded}
           />
           <SideNavElement
-            active={location.pathname.endsWith('databrowser')}
+            active={this.props.location.pathname.endsWith('databrowser')}
             link={`/${this.props.params.projectName}/models/${this.props.models[0].name}/databrowser`}
             iconSrc={require('assets/icons/databrowser.svg')}
             text='Data'
             size={16}
             minimalHighlight
-            onClick={this.handleDatabrowserClick}
             small={!this.props.expanded}
+            data-test='sidenav-databrowser'
           />
           {location.pathname.endsWith('databrowser') && (
             this.renderModels()
@@ -215,22 +223,33 @@ export class SideNav extends React.PureComponent<Props, State> {
             link={`/${project.name}/permissions`}
             iconSrc={require('graphcool-styles/icons/fill/permissions.svg')}
             text='Permissions'
-            active={location.pathname.includes('/permissions')}
+            active={this.props.location.pathname.includes('/permissions')}
             small={!this.props.expanded}
+            data-test='sidenav-permissions'
           />
-          <SideNavElement
-            link={`/${project.name}/actions`}
-            iconSrc={require('graphcool-styles/icons/fill/actions.svg')}
-            text='Mutation Callbacks'
-            active={location.pathname.endsWith('/actions')}
-            small={!this.props.expanded}
-          />
+          {showMutationCallbacks && (
+            <SideNavElement
+              link={`/${project.name}/actions`}
+              iconSrc={require('graphcool-styles/icons/fill/actions.svg')}
+              text='Mutation Callbacks'
+              active={this.props.location.pathname.endsWith('/actions')}
+              small={!this.props.expanded}
+            />
+          )}
           <SideNavElement
             link={`/${project.name}/integrations`}
             iconSrc={require('graphcool-styles/icons/fill/integrations.svg')}
             text='Integrations'
-            active={location.pathname.endsWith('/integrations')}
+            active={this.props.location.pathname.endsWith('/integrations')}
             small={!this.props.expanded}
+          />
+          <SideNavElement
+            link={`/${project.name}/functions`}
+            iconSrc={require('graphcool-styles/icons/fill/actions.svg')}
+            text='Functions'
+            active={this.props.location.pathname.includes('/functions')}
+            small={!this.props.expanded}
+            data-test='sidenav-functions'
           />
         </div>
         {this.renderPlayground()}
@@ -258,16 +277,10 @@ export class SideNav extends React.PureComponent<Props, State> {
     )
   }
 
-  private handleDatabrowserClick = () => {
-    if (this.props.gettingStartedState.isCurrentStep('STEP3_CLICK_DATA_BROWSER')) {
-      this.props.nextStep()
-    }
-  }
-
   private renderPlayground = () => {
     const playgroundPageActive = this.props.router.isActive(`/${this.props.params.projectName}/playground`)
     const showGettingStartedOnboardingPopup = () => {
-      if (this.props.gettingStartedState.isCurrentStep('STEP4_CLICK_PLAYGROUND')) {
+      if (this.props.gettingStartedState.isCurrentStep('STEP3_OPEN_PLAYGROUND')) {
         this.props.nextStep()
       }
     }
@@ -315,9 +328,9 @@ export class SideNav extends React.PureComponent<Props, State> {
             <Tether
               side='top'
               steps={[{
-                step: 'STEP4_CLICK_PLAYGROUND',
+                step: 'STEP3_OPEN_PLAYGROUND',
                 title: 'Open the Playground',
-                description: 'Now that we have defined our data model and added example data it\'s time to send some queries to our backend!', // tslint:disable-line
+                description: 'Now that we have defined our Post type it\'s time to use the GraphQL API!', // tslint:disable-line
               }]}
               offsetY={-20}
               width={280}
@@ -413,6 +426,7 @@ export class SideNav extends React.PureComponent<Props, State> {
                     [$p.bgWhite07]: modelActive(model),
                   },
                 )}
+                data-test={`sidenav-databrowser-model-${model.name}`}
               >
                 <div className={cx($p.pl6, $p.mra, $p.flex, $p.flexRow, $p.itemsCenter)}>
                   <div title={model.name}>
@@ -486,7 +500,14 @@ export class SideNav extends React.PureComponent<Props, State> {
   private showEndpointPopup = () => {
     const id = cuid()
     this.props.showPopup({
-      element: <EndpointPopup id={id} projectId={this.props.project.id} alias={this.props.project.alias} />,
+      element: (
+        <EndpointPopup
+          id={id}
+          projectId={this.props.project.id}
+          alias={this.props.project.alias}
+          region={this.props.project.region}
+        />
+      ),
       id,
     })
   }
@@ -539,6 +560,7 @@ export default Relay.createContainer(MappedSideNav, {
       fragment on Viewer {
         user {
           id
+          createdAt
           crm {
             information {
               isBeta
@@ -553,6 +575,7 @@ export default Relay.createContainer(MappedSideNav, {
         name
         alias
         webhookUrl
+        region
         models(first: 100) {
           edges {
             node {

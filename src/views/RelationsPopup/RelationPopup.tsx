@@ -1,6 +1,6 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
-import {Transaction} from 'react-relay'
+import * as Relay from 'react-relay/classic'
+import {Transaction} from 'react-relay/classic'
 import {RelationPopupDisplayState, Cardinality, Model, Relation} from '../../types/types'
 import RelationHeader from './RelationHeader'
 import PopupWrapper from '../../components/PopupWrapper/PopupWrapper'
@@ -50,6 +50,8 @@ interface State {
   leftModelIsBreakingChange: boolean
   rightModelIsBreakingChange: boolean
   cardinalityIsBreakingChange: boolean
+  fieldOnLeftModelIsRequired: boolean
+  fieldOnRightModelIsRequired: boolean
 }
 
 interface Props {
@@ -76,7 +78,7 @@ class RelationPopup extends React.Component<Props, State> {
 
     this.state = {
       loading: false,
-      creating: Boolean(relation),
+      creating: !Boolean(relation),
       displayState: 'DEFINE_RELATION' as RelationPopupDisplayState,
       leftSelectedModel: preselectedModel ? preselectedModel : relation ? relation.leftModel : null,
       rightSelectedModel: relation ? relation.rightModel : null,
@@ -86,6 +88,8 @@ class RelationPopup extends React.Component<Props, State> {
       relationDescription: relation ? relation.description : '',
       fieldOnLeftModelName: relation ? relation.fieldOnLeftModel.name : null,
       fieldOnRightModelName: leftModelName ? leftModelName : relation ? relation.fieldOnRightModel.name : null,
+      fieldOnLeftModelIsRequired: relation ? relation.fieldOnLeftModel.isRequired : false,
+      fieldOnRightModelIsRequired: relation ? relation.fieldOnRightModel.isRequired : false,
       leftInputIsBreakingChange: false,
       rightInputIsBreakingChange: false,
       relationNameIsBreakingChange: false,
@@ -131,6 +135,7 @@ class RelationPopup extends React.Component<Props, State> {
       selectedCardinality, relationName, relationDescription,
       fieldOnRightModelName, fieldOnLeftModelName, leftModelIsBreakingChange, rightModelIsBreakingChange,
       leftInputIsBreakingChange, rightInputIsBreakingChange, relationNameIsBreakingChange,
+      fieldOnLeftModelIsRequired, fieldOnRightModelIsRequired,
     } = this.state
 
     let displayBreakingIndicator = false
@@ -155,6 +160,8 @@ class RelationPopup extends React.Component<Props, State> {
         (displayState === 'SET_MUTATIONS' as RelationPopupDisplayState && rightTabHasBreakingChange)
       )
 
+    const isBeta = this.props.viewer.user.crm.information.isBeta
+
     const breakingChangeMessageElements: JSX.Element[] =
       displayBreakingIndicator && this.breakingChangeMessages().map((message, i) =>
         <div key={i}>{message}</div>)
@@ -166,14 +173,13 @@ class RelationPopup extends React.Component<Props, State> {
     )]
 
     return (
-    <Modal
-      isOpen
-      onRequestClose={this.close}
-      contentLabel='Relation'
-      style={customModalStyle}
-    >
+      <Modal
+        isOpen
+        onRequestClose={this.close}
+        contentLabel='Relation'
+        style={customModalStyle}
+      >
         <style global jsx>{`
-
           .relationPopupContent {
             @inherit: .buttonShadow;
             width: 745px;
@@ -187,7 +193,6 @@ class RelationPopup extends React.Component<Props, State> {
             right: 0px;
             background-color: rgb(250,250,250);
           }
-
         `}</style>
         <ModalDocs
           title='How to define Relations'
@@ -238,6 +243,10 @@ class RelationPopup extends React.Component<Props, State> {
                       didChangeFieldNameOnRightModel={this.didChangeFieldNameOnRightModel}
                       fieldOnLeftModelName={fieldOnLeftModelName}
                       fieldOnRightModelName={fieldOnRightModelName}
+                      fieldOnLeftModelIsRequired={fieldOnLeftModelIsRequired}
+                      fieldOnRightModelIsRequired={fieldOnRightModelIsRequired}
+                      didChangeFieldOnLeftModelIsRequired={this.didChangeFieldOnLeftModelIsRequired}
+                      didChangeFieldOnRightModelIsRequired={this.didChangeFieldOnRightModelIsRequired}
                       leftInputIsBreakingChange={leftInputIsBreakingChange}
                       rightInputIsBreakingChange={rightInputIsBreakingChange}
                       leftModelIsBreakingChange={leftModelIsBreakingChange}
@@ -325,6 +334,18 @@ class RelationPopup extends React.Component<Props, State> {
     }
   }
 
+  private didChangeFieldOnRightModelIsRequired = (isRequired: boolean) => {
+    this.setState({
+      fieldOnRightModelIsRequired: isRequired,
+    } as State)
+  }
+
+  private didChangeFieldOnLeftModelIsRequired = (isRequired: boolean) => {
+    this.setState({
+      fieldOnLeftModelIsRequired: isRequired,
+    } as State)
+  }
+
   private didSelectLeftModel = (model: Model) => {
     const {relation} = this.props.viewer
     this.setState(
@@ -394,6 +415,8 @@ class RelationPopup extends React.Component<Props, State> {
           fieldOnRightModelName: newRightFieldName,
           rightInputIsBreakingChange: relation ? newRightFieldName !== relation.fieldOnRightModel.name : false,
           cardinalityIsBreakingChange: relation ? this.cardinalityFromRelation(relation) !== cardinality : false,
+          fieldOnLeftModelIsRequired: false,
+          fieldOnRightModelIsRequired: false,
         } as State)
       })
   }
@@ -467,28 +490,30 @@ class RelationPopup extends React.Component<Props, State> {
   }
 
   private rightFieldType = () => {
-    const {leftSelectedModel, selectedCardinality} = this.state
+    const {leftSelectedModel, selectedCardinality, fieldOnRightModelIsRequired} = this.state
 
     if (!leftSelectedModel) {
       return null
     }
 
     if (selectedCardinality.startsWith('MANY')) {
-      return '[' + leftSelectedModel.name + ']'
+      return '[' + leftSelectedModel.name + '!]!'
     }
-    return leftSelectedModel.name
+    const required = fieldOnRightModelIsRequired ? '!' : ''
+    return leftSelectedModel.name + required
   }
 
   private leftFieldType = () => {
-    const {rightSelectedModel, selectedCardinality} = this.state
+    const {rightSelectedModel, selectedCardinality, fieldOnLeftModelIsRequired} = this.state
 
     if (!rightSelectedModel) {
       return null
     }
     if (selectedCardinality.endsWith('MANY')) {
-      return '[' + rightSelectedModel.name + ']'
+      return '[' + rightSelectedModel.name + '!]!'
     }
-    return rightSelectedModel.name
+    const required = fieldOnLeftModelIsRequired ? '!' : ''
+    return rightSelectedModel.name + required
   }
 
   private onChangeRelationNameInput = (relationName: string) => {
@@ -629,6 +654,8 @@ class RelationPopup extends React.Component<Props, State> {
         fieldOnRightModelName: rightField,
         fieldOnLeftModelIsList: this.state.selectedCardinality.endsWith('MANY'),
         fieldOnRightModelIsList: this.state.selectedCardinality.startsWith('MANY'),
+        fieldOnLeftModelIsRequired: this.state.fieldOnLeftModelIsRequired,
+        fieldOnRightModelIsRequired: this.state.fieldOnRightModelIsRequired,
       }),
       {
         onSuccess: () => {
@@ -659,6 +686,8 @@ class RelationPopup extends React.Component<Props, State> {
         fieldOnRightModelName: rightField,
         fieldOnLeftModelIsList: this.state.selectedCardinality.endsWith('MANY'),
         fieldOnRightModelIsList: this.state.selectedCardinality.startsWith('MANY'),
+        fieldOnLeftModelIsRequired: this.state.fieldOnLeftModelIsRequired,
+        fieldOnRightModelIsRequired: this.state.fieldOnRightModelIsRequired,
       }),
       {
         onSuccess: () => {
@@ -725,11 +754,13 @@ export default Relay.createContainer(withRouter(mappedCreateRelationPopup), {
             id
             name
             isList
+            isRequired
           }
           fieldOnRightModel {
             id
             name
             isList
+            isRequired
           }
           leftModel {
             id
@@ -742,6 +773,13 @@ export default Relay.createContainer(withRouter(mappedCreateRelationPopup), {
             name
             namePlural
             itemCount
+          }
+        }
+        user {
+          crm {
+            information {
+              isBeta
+            }
           }
         }
         project: projectByName(projectName: $projectName) {

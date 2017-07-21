@@ -17,7 +17,7 @@ export function isValid(state: PermissionPopupState): PermissionPopupErrors {
   errors.permissionTypeMissing = state.selectedOperation === null
   errors.invalidQuery = !state.queryValid
   errors.noFieldsSelected = state.editing ? false :
-    (state.selectedOperation === 'READ' && (state.fieldIds.length === 0 && !state.applyToWholeModel))
+    (state.selectedOperation !== 'DELETE' && (state.fieldIds.length === 0 && !state.applyToWholeModel))
 
   return errors
 }

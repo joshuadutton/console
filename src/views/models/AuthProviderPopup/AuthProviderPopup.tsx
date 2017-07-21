@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import AuthProviderSidePanel from './AuthProviderSidePanel'
 import {Icon} from 'graphcool-styles'
 import { $p } from 'graphcool-styles'
@@ -17,12 +17,14 @@ interface Props {
   params: any
   location: any
   router: ReactRouter.InjectedRouter
+  isBeta: boolean
 }
 
 const urlToType = {
   digits: 'AUTH_PROVIDER_DIGITS',
   email: 'AUTH_PROVIDER_EMAIL',
   auth0: 'AUTH_PROVIDER_AUTH0',
+  anonymous: 'anonymous-auth-provider',
 }
 
 class AuthProviderPopup extends React.Component<Props, null> {
@@ -35,8 +37,6 @@ class AuthProviderPopup extends React.Component<Props, null> {
 
   componentDidMount() {
     tracker.track(ConsoleEvents.AuthProvider.Popup.opened({source: 'user-model'}))
-    // TODO remove this
-    global['a'] = this
   }
 
   render() {
@@ -91,7 +91,33 @@ class AuthProviderPopup extends React.Component<Props, null> {
                   </div>
                   <div>
                     {authProviders.find(a => a.type === 'AUTH_PROVIDER_EMAIL' && a.isEnabled) &&
-                    <Icon src={require('assets/new_icons/check.svg')} color='#7ED321'/>
+                      <Icon src={require('assets/new_icons/check.svg')} color='#7ED321'/>
+                    }
+                  </div>
+                </div>
+                <div
+                  className={cx(
+                    $p.flex, $p.pa25, $p.bb, $p.bBlack10, $p.itemsCenter, $p.pointer, $p.justifyBetween,
+                    selectedType === 'anonymous' && $p.bgBlack04,
+                  )}
+                  onClick={() => {
+                    this.props.router.push(`/${projectName}/integrations/authentication/anonymous`)
+                  }}
+                >
+                  <div className={cx($p.flex, $p.itemsCenter)}>
+                    <Icon
+                      src={require('assets/icons/logo.svg')}
+                      width={40}
+                      height={40}
+                      color='#00B861'
+                    />
+                    <div className={cx($p.fw3, $p.f25, $p.ml16)}>
+                      Anonymous
+                    </div>
+                  </div>
+                  <div>
+                    {false &&
+                      <Icon src={require('assets/new_icons/check.svg')} color='#7ED321'/>
                     }
                   </div>
                 </div>
@@ -154,6 +180,7 @@ class AuthProviderPopup extends React.Component<Props, null> {
 
 const MappedAuthProviderPopup = mapProps({
   project: props => props.viewer.project,
+  isBeta: props => props.viewer.user.crm.information.isBeta,
 })(withRouter(AuthProviderPopup))
 
 export default Relay.createContainer(MappedAuthProviderPopup, {
@@ -173,6 +200,13 @@ export default Relay.createContainer(MappedAuthProviderPopup, {
             }
           }
           ${AuthProviderSidePanel.getFragment('project')}
+        }
+        user {
+          crm {
+            information {
+              isBeta
+            }
+          }
         }
       }
     `,

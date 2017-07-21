@@ -2,7 +2,7 @@ import {isValid, toggleIsList, getMigrationUI} from '../FieldPopupState'
 import {emptyField} from '../constants'
 
 test('should invalidate empty field', () => {
-  const valid = isValid(0, emptyField, undefined)
+  const valid = isValid(0, emptyField(), undefined)
   expect(valid.enumValueMissing).toBe(false)
   expect(valid.invalidName).toBe(true)
   expect(valid.migrationValueMissing).toBe(false)
@@ -10,7 +10,7 @@ test('should invalidate empty field', () => {
 })
 
 test('should toggle isList', () => {
-  expect(toggleIsList(emptyField).isList).toBe(true)
+  expect(toggleIsList(emptyField()).isList).toBe(true)
 })
 
 describe('show proper migration ui state', () => {
@@ -18,10 +18,10 @@ describe('show proper migration ui state', () => {
     const migrationUI = getMigrationUI(
       0,
       {
-        ...emptyField,
+        ...emptyField(),
         isRequired: true,
       },
-      emptyField,
+      emptyField(),
     )
     expect(migrationUI.showMigration).toBe(false)
     expect(migrationUI.migrationOptional).toBe(true)
@@ -30,7 +30,7 @@ describe('show proper migration ui state', () => {
     const migrationUI = getMigrationUI(
       5,
       {
-        ...emptyField,
+        ...emptyField(),
         isRequired: true,
       },
       undefined,
@@ -38,26 +38,26 @@ describe('show proper migration ui state', () => {
     expect(migrationUI.showMigration).toBe(true)
     expect(migrationUI.migrationOptional).toBe(false)
   })
-  test('show migration and make it mandatory when field changed to required', () => {
+  test('show migration and but don\'t make it mandatory when field changed to required', () => {
     const migrationUI = getMigrationUI(
       5,
       {
-        ...emptyField,
+        ...emptyField(),
         isRequired: true,
       },
-      emptyField,
+      emptyField(),
     )
     expect(migrationUI.showMigration).toBe(true)
-    expect(migrationUI.migrationOptional).toBe(false)
+    expect(migrationUI.migrationOptional).toBe(true)
   })
   test('show migration and make it mandatory when type changed', () => {
     const migrationUI = getMigrationUI(
       5,
       {
-        ...emptyField,
+        ...emptyField(),
         typeIdentifier: 'String',
       },
-      emptyField,
+      emptyField(),
     )
     expect(migrationUI.showMigration).toBe(true)
     expect(migrationUI.migrationOptional).toBe(false)
@@ -66,10 +66,10 @@ describe('show proper migration ui state', () => {
     const migrationUI = getMigrationUI(
       5,
       {
-        ...emptyField,
+        ...emptyField(),
         isList: true,
       },
-      emptyField,
+      emptyField(),
     )
     expect(migrationUI.showMigration).toBe(true)
     expect(migrationUI.migrationOptional).toBe(false)
@@ -77,9 +77,9 @@ describe('show proper migration ui state', () => {
   test('show migration and make it mandatory when it got scalar from list', () => {
     const migrationUI = getMigrationUI(
       5,
-      emptyField,
+      emptyField(),
       {
-        ...emptyField,
+        ...emptyField(),
         isList: true,
       },
     )

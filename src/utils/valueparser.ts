@@ -99,9 +99,9 @@ export function atomicValueToString(
   switch (type) {
     case 'DateTime':
       if (serialize) {
-        return new Date(value).toISOString()
+        return new Date(value as string).toISOString()
       }
-      return new Date(value).toLocaleString()
+      return new Date(value as string).toLocaleString()
     case 'Password':
       return '***************'
     case 'Json':

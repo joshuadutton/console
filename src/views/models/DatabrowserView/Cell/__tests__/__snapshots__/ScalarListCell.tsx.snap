@@ -1,9 +1,69 @@
 exports[`test ScalarListCell renders 1`] = `
-<Connect(PopupWrapper)
-  onClickOutside={[Function]}>
+<Modal
+  ariaHideApp={true}
+  closeTimeoutMS={0}
+  contentLabel="Edit scalar list"
+  isOpen={true}
+  onRequestClose={[Function]}
+  parentSelector={[Function]}
+  portalClassName="ReactModalPortal"
+  shouldCloseOnOverlayClick={true}
+  style={
+    Object {
+      "content": Object {
+        "background": "white",
+        "border": "none",
+        "borderRadius": 2,
+        "bottom": "initial",
+        "boxShadow": "0 1px 7px rgba(0,0,0,.2)",
+        "height": "auto",
+        "left": "initial",
+        "overflow": "visible",
+        "padding": 0,
+        "position": "relative",
+        "right": "initial",
+        "top": "initial",
+        "width": 400,
+      },
+      "overlay": Object {
+        "alignItems": "center",
+        "background": "rgba(255,255,255,.4)",
+        "backgroundColor": "rgba(255,255,255,.9)",
+        "display": "flex",
+        "justifyContent": "center",
+        "zIndex": 100,
+      },
+    }
+  }>
+  <style
+    global={true}
+    jsx={true}>
+    
+              .scalar-list-cell {
+                .add-icon {
+                  @p: .bgBlue, .br100, .pointer;
+                }
+              }
+    
+              .scalar-list-cell .remove-icon {
+                @p: .bgrRed, .br100, .flex, .itemsCenter, .justifyCenter, .pointer;
+                padding: 8px;
+                height: 30px;
+                width: 30px;
+              }
+            
+  </style>
+  <style
+    jsx={true}>
+    
+              input {
+                background: transparent;
+              }
+            
+  </style>
   <div
-    className="flex bgBlack50 w100 h100 justifyCenter itemsCenter scalar-list-cell">
-    <styled.div
+    className="scalar-list-cell">
+    <div
       className="bgWhite flex flexColumn relative">
       <div
         className="header">
@@ -36,24 +96,6 @@ exports[`test ScalarListCell renders 1`] = `
             className="addNewText">
             Add new item ...
           </span>
-          <style
-            global={true}
-            jsx={true}>
-            
-                              .scalar-list-cell {
-                                .add-icon {
-                                  @p: .bgBlue, .br100, .pointer;
-                                }
-                              }
-            
-                              .scalar-list-cell .remove-icon {
-                                @p: .bgrRed, .br100, .flex, .itemsCenter, .justifyCenter, .pointer;
-                                padding: 8px;
-                                height: 30px;
-                                width: 30px;
-                              }
-                            
-          </style>
           <Icon
             className="add-icon disabled"
             color="#fff"
@@ -132,7 +174,7 @@ exports[`test ScalarListCell renders 1`] = `
           Save
         </styled.button>
       </div>
-    </styled.div>
+    </div>
   </div>
-</Connect(PopupWrapper)>
+</Modal>
 `;

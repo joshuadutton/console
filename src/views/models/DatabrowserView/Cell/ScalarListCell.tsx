@@ -5,10 +5,12 @@ import {AtomicValue} from '../../../../types/utils'
 import {atomicValueToString, stringToValue} from '../../../../utils/valueparser'
 import {Field} from '../../../../types/types'
 const classes: any = require('./ScalarListCell.scss')
+import * as Modal from 'react-modal'
 import styled from 'styled-components'
 import {variables, $p, Icon} from 'graphcool-styles'
 import * as cx from 'classnames'
 import {isEqual} from 'lodash'
+import modalStyle from '../../../../utils/modalStyle'
 
 interface State {
   values: AtomicValue[]
@@ -51,10 +53,6 @@ const SaveButton = styled(Button)`
       }
     `
 
-const Container = styled.div`
-  width: 400px;
-`
-
 const InputWrapper = styled.div`
   input {
     padding: 0 !important;
@@ -84,13 +82,25 @@ const Item = styled.div`
     opacity: 0;
     transition: .3s opacity;
   }
-  
+
   &:hover {
     i {
       opacity: 1;
     }
   }
 `
+
+const customModalStyle = {
+  overlay: {
+    ...modalStyle.overlay,
+    background: 'rgba(255,255,255,.4)',
+  },
+  content: {
+    ...modalStyle.content,
+    background: 'white',
+    width: 400,
+  },
+}
 
 export default class ScalarListCell extends React.Component<CellRequirements, State> {
 
@@ -117,6 +127,7 @@ export default class ScalarListCell extends React.Component<CellRequirements, St
         cancel: () => null,
         onKeyDown: this.onKeyDown,
       },
+      enums: this.props.enums,
     }
   }
 
@@ -132,21 +143,36 @@ export default class ScalarListCell extends React.Component<CellRequirements, St
         cancel: () => null,
         onKeyDown: this.onKeyDown,
       },
+      enums: this.props.enums,
     }
     return (
-      <PopupWrapper onClickOutside={this.handleOutsideClick}>
-        <div
-          className={cx(
-            $p.flex,
-            $p.bgBlack50,
-            $p.w100,
-            $p.h100,
-            $p.justifyCenter,
-            $p.itemsCenter,
-            'scalar-list-cell',
-          )}
-        >
-          <Container
+      <Modal
+        isOpen
+        style={customModalStyle}
+        contentLabel='Edit scalar list'
+        onRequestClose={this.handleOutsideClick}
+      >
+        <style jsx global>{`
+          .scalar-list-cell {
+            .add-icon {
+              @p: .bgBlue, .br100, .pointer;
+            }
+          }
+
+          .scalar-list-cell .remove-icon {
+            @p: .bgrRed, .br100, .flex, .itemsCenter, .justifyCenter, .pointer;
+            padding: 8px;
+            height: 30px;
+            width: 30px;
+          }
+        `}</style>
+        <style jsx>{`
+          input {
+            background: transparent;
+          }
+        `}</style>
+        <div className='scalar-list-cell'>
+          <div
             className={cx(
               $p.bgWhite,
               $p.flex,
@@ -219,20 +245,6 @@ export default class ScalarListCell extends React.Component<CellRequirements, St
                     )}
                   </span>
                 )}
-                <style jsx global>{`
-                  .scalar-list-cell {
-                    .add-icon {
-                      @p: .bgBlue, .br100, .pointer;
-                    }
-                  }
-
-                  .scalar-list-cell .remove-icon {
-                    @p: .bgrRed, .br100, .flex, .itemsCenter, .justifyCenter, .pointer;
-                    padding: 8px;
-                    height: 30px;
-                    width: 30px;
-                  }
-                `}</style>
                 <Icon
                   className={'add-icon ' + (this.state.newValue ? '' : classes.disabled)}
                   onClick={() => this.addNewValue()}
@@ -306,9 +318,9 @@ export default class ScalarListCell extends React.Component<CellRequirements, St
                 Save
               </SaveButton>
             </div>
-          </Container>
+          </div>
         </div>
-      </PopupWrapper>
+      </Modal>
     )
   }
 

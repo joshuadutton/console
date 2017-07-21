@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import { ActionTriggerType, ActionHandlerType, ActionTriggerMutationModelMutationType } from '../types/types'
 
 interface Props {

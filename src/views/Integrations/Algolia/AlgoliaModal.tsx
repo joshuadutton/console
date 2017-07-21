@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as Modal from 'react-modal'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {fieldModalStyle} from '../../../utils/modalStyle'
 import {SearchProviderAlgolia} from '../../../types/types'
 import UpdateSearchProviderAlgolia from '../../../mutations/UpdateSearchProviderAlgolia'
@@ -138,7 +138,7 @@ export default class AlgoliaModal extends React.Component<Props, null> {
           <div className='inputs'>
             <FloatingInput
               labelClassName={cx($p.f16, $p.pa16, $p.black50, $p.fw3)}
-              className={cx($p.pa16, $p.br2, $p.bn, $p.mb10, $p.f25, $p.fw3, 'input')}
+              className={cx($p.pa16, $p.br2, $p.bn, $p.mb10, $p.f25, $p.fw3, $p.lhTitle, 'input')}
               label='Application Id'
               placeholder='xxxxxxxxxxxxx'
               value={applicationId || ''}
@@ -146,7 +146,7 @@ export default class AlgoliaModal extends React.Component<Props, null> {
             />
             <FloatingInput
               labelClassName={cx($p.f16, $p.pa16, $p.black50, $p.fw3)}
-              className={cx($p.pa16, $p.br2, $p.bn, $p.mb10, $p.f25, $p.fw3, 'input')}
+              className={cx($p.pa16, $p.br2, $p.bn, $p.mb10, $p.f25, $p.fw3, $p.lhTitle, 'input')}
               label='API Key'
               placeholder='xxxxxxxxxxxxx'
               value={apiKey || ''}

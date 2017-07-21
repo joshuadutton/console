@@ -1,7 +1,7 @@
 import * as React from 'react'
 import Helmet from 'react-helmet'
 import ReactElement = React.ReactElement
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import { $p } from 'graphcool-styles'
 import * as cx from 'classnames'
 import {Viewer, SearchProviderAlgolia, AlgoliaSyncQuery, Project} from '../../../types/types'
@@ -142,6 +142,7 @@ class AlgoliaView extends React.Component<Props, State> {
               algolia={algolia}
               project={project}
               onRequestClose={this.handleCloseNewIndex}
+              noIndeces={indexes.length === 0}
             />
           )}
         </div>
@@ -249,6 +250,7 @@ class AlgoliaView extends React.Component<Props, State> {
     }
 
     if (this.indexValid() && node) {
+      console.log('updating index')
       Relay.Store.commitUpdate(
         new UpdateAlgoliaSyncQueryMutation({
           algoliaSyncQueryId: node.id,
@@ -256,6 +258,17 @@ class AlgoliaView extends React.Component<Props, State> {
           isEnabled: true,
           indexName: node.indexName,
         }),
+        {
+          onSuccess: (transaction) => {
+            this.props.showNotification({
+              message: 'Index updated',
+              level: 'success',
+            })
+          },
+          onFailure: (transaction) => {
+            onFailureShowNotification(transaction, this.props.showNotification)
+          },
+        },
       )
     }
   }

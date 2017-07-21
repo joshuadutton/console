@@ -41,10 +41,13 @@ declare var Stripe: any
 declare var analytics: any
 declare var __BACKEND_ADDR__: string
 declare var __EXAMPLE_ADDR__: string
-declare var __BACKEND_WS_ADDR__: string
-declare var __HEARTBEAT_ADDR__: string | boolean
+declare var __SUBSCRIPTIONS_EU_WEST_1__: any
+declare var __SUBSCRIPTIONS_US_WEST_2__: any
+declare var __SUBSCRIPTIONS_AP_NORTHEAST_1__: any
+declare var __HEARTBEAT_ADDR__: string
 declare var __INTERCOM_ID__: string
 declare var __STRIPE_PUBLISHABLE_KEY__: string
+declare var __CLI_AUTH_TOKEN_ENDPOINT__: string
 declare var __METRICS_ENDPOINT__: string
 declare var __GA_CODE__: string
 declare var __AUTH0_DOMAIN__: string
@@ -61,7 +64,7 @@ declare module 'cuid' {
   export default function cuid(): string
 }
 
-declare module 'react-relay' {
+declare module 'react-relay/classic' {
 
   // fragments are a hash of functions
   interface Fragments {

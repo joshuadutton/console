@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {showNotification} from '../../actions/notification'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {connect} from 'react-redux'
 import {nextStep} from '../../actions/gettingStarted'
 import {Link, withRouter} from 'react-router'
@@ -164,7 +164,6 @@ class ModelHeader extends React.Component<Props, State> {
               {schemaActive ? (
                 <BlueSettingsLink
                   to={`/${this.props.params.projectName}/models/${this.props.params.modelName}/databrowser`}
-                  onClick={this.dataViewOnClick}
                 >
                   <Icon width={20} height={20} src={require('graphcool-styles/icons/fill/check.svg')}/>
                   <Tether
@@ -309,13 +308,6 @@ class ModelHeader extends React.Component<Props, State> {
           },
         )
       })
-  }
-
-  private dataViewOnClick = () => {
-    tracker.track(ConsoleEvents.Schema.doneEditingClick())
-    if (this.props.gettingStartedState.isCurrentStep('STEP3_CLICK_DATA_BROWSER')) {
-      this.props.nextStep()
-    }
   }
 
   private handleModelModalClose = () => {

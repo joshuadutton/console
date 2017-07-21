@@ -8,7 +8,7 @@ import {creditCardNumberValid, expirationDateValid, cpcValid,
   minCPCDigits, minCreditCardDigits, maxCPCDigits, maxCreditCardDigits} from '../../../utils/creditCardValidator'
 import {Icon} from 'graphcool-styles'
 import {ESCAPE_KEY, ENTER_KEY} from '../../../utils/constants'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {ShowNotificationCallback} from '../../../types/utils'
 import {connect} from 'react-redux'
 import {showNotification} from '../../../actions/notification'
@@ -49,21 +49,31 @@ interface Props {
 
 class CreditCardInputSection extends React.Component<Props, State> {
 
-  state = {
-    creditCardNumber: '',
-    cardHolderName: '',
-    expirationDate: '',
-    cpc: '',
-    creditCardDetailsValid: false,
-    displayAddressDataInput: false,
+  constructor(props) {
+    super(props)
 
-    addressLine1: '',
-    addressLine2: '',
-    zipCode: '',
-    state: '',
-    city: '',
-    country: '',
-    addressDataValid: false,
+    const project = this.props.viewer.crm.crm.customer.projects.edges.find(edge => {
+      return edge.node.name === this.props.projectName
+    }).node
+
+    const creditCard = project.projectBillingInformation.creditCard
+
+    this.state = {
+      creditCardNumber: '',
+      cardHolderName: '',
+      expirationDate: '',
+      cpc: '',
+      displayAddressDataInput: false,
+
+      addressLine1: '',
+      addressLine2: '',
+      zipCode: '',
+      state: '',
+      city: '',
+      country: '',
+      creditCardDetailsValid: !!creditCard,
+      addressDataValid: !!creditCard,
+    }
   }
 
   render() {
@@ -229,8 +239,8 @@ class CreditCardInputSection extends React.Component<Props, State> {
           <div>
             <div className='title'>State</div>
             <input
-              className='narrowInput inputField'
-              placeholder='Enter state'
+              className='wideInput inputField'
+              placeholder='Enter state (optional)'
               value={this.state.state}
               onChange={(e: any) => this.setState({state: e.target.value} as State, () =>
                 this.validateAddressDetails())}
@@ -381,50 +391,51 @@ class CreditCardInputSection extends React.Component<Props, State> {
   }
 
   private onConfirm = (shouldUpdateCreditCard: boolean) => {
+    if (this.state.creditCardDetailsValid && this.state.addressDataValid) {
+      this.props.setLoading(true)
 
-    this.props.setLoading(true)
+      if (shouldUpdateCreditCard) {
+        const expirationDateComponents = this.state.expirationDate.split('/')
+        const expirationMonth = expirationDateComponents[0]
+        const expirationYear = expirationDateComponents[1]
 
-    if (shouldUpdateCreditCard) {
-      const expirationDateComponents = this.state.expirationDate.split('/')
-      const expirationMonth = expirationDateComponents[0]
-      const expirationYear = expirationDateComponents[1]
-
-      if (this.state.creditCardDetailsValid && this.state.addressDataValid) {
-        Stripe.card.createToken(
+          Stripe.card.createToken(
+            {
+              number: this.state.creditCardNumber,
+              cvc: this.state.cpc,
+              exp_month: expirationMonth,
+              exp_year: expirationYear,
+              name: this.state.cardHolderName,
+              address_line1: this.state.addressLine1,
+              address_line2: this.state.addressLine2,
+              address_city: this.state.city,
+              address_state: this.state.state,
+              address_zip: this.state.zipCode,
+              address_country: this.state.country,
+            },
+            this.stripeResponseHandler,
+          )
+      } else {
+        Relay.Store.commitUpdate(
+          new SetPlanMutation({
+            projectId: this.props.projectId,
+            plan: this.props.plan,
+          }),
           {
-            number: this.state.creditCardNumber,
-            cvc: this.state.cpc,
-            exp_month: expirationMonth,
-            exp_year: expirationYear,
-            name: this.state.cardHolderName,
-            address_line1: this.state.addressLine1,
-            address_line2: this.state.addressLine2,
-            address_city: this.state.city,
-            address_state: this.state.state,
-            address_zip: this.state.zipCode,
-            address_country: this.state.country,
+            onSuccess: () => {
+              this.props.close()
+            },
+            onFailure: (transaction) => {
+              onFailureShowNotification(transaction, this.props.showNotification)
+              this.props.setLoading(false)
+            },
           },
-          this.stripeResponseHandler,
         )
       }
     } else {
-      Relay.Store.commitUpdate(
-        new SetPlanMutation({
-          projectId: this.props.projectId,
-          plan: this.props.plan,
-        }),
-        {
-          onSuccess: () => {
-            this.props.close()
-          },
-          onFailure: (transaction) => {
-            onFailureShowNotification(transaction, this.props.showNotification)
-            this.props.setLoading(false)
-          },
-        },
-      )
+      console.log('Not valid')
+      console.log(this.state.creditCardDetailsValid && this.state.addressDataValid)
     }
-
   }
 
   private stripeResponseHandler = (status, response) => {
@@ -472,10 +483,10 @@ class CreditCardInputSection extends React.Component<Props, State> {
   private validateAddressDetails = () => {
     const addressLine1Valid = this.state.addressLine1.length > 0
     const zipcodeValid = this.state.zipCode.length > 0
-    const stateValid = this.state.state.length > 0
+    // const stateValid = this.state.state.length > 0
     const cityValid = this.state.city.length > 0
     const countryValid = this.state.country.length > 0
-    const addressValid = addressLine1Valid && zipcodeValid && stateValid && cityValid && countryValid
+    const addressValid = addressLine1Valid && zipcodeValid && cityValid && countryValid
 
     this.setState({addressDataValid: addressValid} as State)
   }

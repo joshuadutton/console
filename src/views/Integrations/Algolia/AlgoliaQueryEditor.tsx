@@ -1,11 +1,11 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {QueryEditor} from 'graphiql/dist/components/QueryEditor'
 import {SearchProviderAlgolia, Model} from '../../../types/types'
 import {withRouter} from 'react-router'
-import { buildClientSchema } from 'graphql'
-import { validate } from 'graphql/validation'
-import { parse } from 'graphql/language'
+import {buildClientSchema} from 'graphql'
+import {validate} from 'graphql/validation'
+import {parse} from 'graphql/language'
 import AlgoliaQuery from './AlgoliaQuery'
 import ConfirmOperationsPopup from './ConfirmOperationsPopup'
 
@@ -21,7 +21,19 @@ interface Props {
   onUpdate: () => void
 }
 
-class AlgoliaQueryEditor extends React.Component<Props, null> {
+interface State {
+  saving: boolean
+}
+
+class AlgoliaQueryEditor extends React.Component<Props, State> {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      saving: false,
+    }
+  }
+
   render() {
     const {
       algolia,
@@ -91,8 +103,8 @@ class AlgoliaQueryEditor extends React.Component<Props, null> {
           <div className='button delete' onClick={onDelete}>Delete</div>
           <div className='right'>
             <div className='button cancel' onClick={onCancel}>Cancel</div>
-            <div className={'button save' + (fragmentValid ? ' active' : '')} onClick={onUpdate}>Save</div>
-            {fragmentValid && selectedModel.itemCount > 0 && fragmentChanged && (
+            <div className={'button save' + (fragmentValid ? ' active' : '')} onClick={this.update}>Save</div>
+            {fragmentValid && selectedModel.itemCount > 0 && fragmentChanged && this.state.saving && (
               <ConfirmOperationsPopup
                 numOperations={selectedModel.itemCount}
                 onCancel={onCancel}
@@ -106,6 +118,14 @@ class AlgoliaQueryEditor extends React.Component<Props, null> {
         </div>
       </div>
     )
+  }
+
+  private update = () => {
+    if (this.props.selectedModel.itemCount > 0 && !this.state.saving) {
+      this.setState({saving: true})
+    } else {
+      this.props.onUpdate()
+    }
   }
 }
 

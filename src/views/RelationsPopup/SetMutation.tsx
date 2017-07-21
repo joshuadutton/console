@@ -217,38 +217,40 @@ export default class SetMutation extends React.Component<Props, State> {
   private generateRelationNameInputComponent = (): JSX.Element => {
     const {relationName} = this.props
 
-    return relationName.length > 0 && !validateRelationName(relationName) ? (
-
-        <div className='flex justifyBetween itemsCenter w100'>
-          <style jsx={true}>{`
-            input {
-              line-height: 1.5;
-            }
-          `}</style>
-          <input
-            className={`f38 fw3 w100 ph25
-                        ${relationName.length === 0 || validateRelationName(relationName) ? 'blue' : 'red'}`}
-            autoFocus={true}
-            placeholder='Set a name for the relation...'
-            value={relationName}
-            onKeyDown={this.handleKeyDownOnRelationName}
-            onBlur={() => this.setState({
-                isEnteringRelationName: false,
-              } as State)}
-            onChange={(e: any) => {
-              this.props.onChangeRelationNameInput(e.target.value)
+    return (
+      <div className='flex justifyBetween itemsCenter w100'>
+        <style jsx={true}>{`
+          input {
+            line-height: 1.5;
+          }
+        `}</style>
+        <input
+          className={`f38 fw3 w100 ph25
+                      ${relationName.length === 0 || validateRelationName(relationName) ? 'blue' : 'red'}`}
+          autoFocus={true}
+          placeholder='Set a name for the relation...'
+          value={relationName}
+          onKeyDown={this.handleKeyDownOnRelationName}
+          onBlur={() => this.setState({
+              isEnteringRelationName: false,
+            } as State)}
+          onChange={(e: any) => {
+            this.props.onChangeRelationNameInput(e.target.value)
+            if (!this.state.isEnteringRelationName) {
               this.setState(
                 {
                   isEnteringRelationName: true,
                 } as State,
               )
-            }}
-            onFocus={() =>
-              this.setState({
-                isEnteringRelationDescription: false,
-              } as State)
-              }
-          />
+            }
+          }}
+          onFocus={() =>
+            this.setState({
+              isEnteringRelationDescription: false,
+            } as State)
+          }
+        />
+        {!validateRelationName(relationName) && (
           <Tooltip
             className='red'
             text='Relation name has to be capitalized and must only contain alphanumeric characters.'
@@ -260,34 +262,9 @@ export default class SetMutation extends React.Component<Props, State> {
               height={25}
             />
           </Tooltip>
-        </div>
-      ) : (
-        <input
-          className={`f38 fw3 w100 ph25
-                    ${relationName.length === 0 || validateRelationName(relationName) ? 'blue' : 'red'}`}
-          autoFocus={true}
-          placeholder='Set a name for the relation...'
-          value={relationName}
-          onKeyDown={this.handleKeyDownOnRelationName}
-          onBlur={() => this.setState({
-            isEnteringRelationName: false,
-            } as State)
-          }
-          onChange={(e: any) => {
-          this.props.onChangeRelationNameInput(e.target.value)
-          this.setState(
-            {
-              isEnteringRelationName: true,
-            } as State,
-          )
-        }}
-          onFocus={() =>
-          this.setState({
-            isEnteringRelationDescription: false,
-          } as State)
-          }
-        />
-      )
+        )}
+      </div>
+    )
   }
 
 }

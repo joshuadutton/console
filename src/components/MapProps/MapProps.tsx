@@ -17,7 +17,6 @@ export default function mapProps(mapping: { [key: string]: (props: any) => any }
             {},
           )
         } catch (err) {
-          console.log('Caught exception in <MapProps>')
           console.error(err)
           return null
         }

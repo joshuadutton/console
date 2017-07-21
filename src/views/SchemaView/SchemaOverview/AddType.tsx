@@ -1,7 +1,7 @@
 import * as React from 'react'
 import FieldItem from './FieldItem'
 import {Field, Project, Model} from '../../../types/types'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {connect} from 'react-redux'
 import {showDonePopup, nextStep} from '../../../actions/gettingStarted'
 import {showNotification} from '../../../actions/notification'
@@ -41,7 +41,7 @@ interface Props {
   showDonePopup: () => void
   nextStep: () => Promise<any>
   gettingStartedState: GettingStartedState
-
+  params: any
 }
 
 const idField = {
@@ -215,6 +215,8 @@ class AddType extends React.Component<Props, State> {
                 field={field}
                 permissions={permissions}
                 hideBorder={index === 0}
+                projectName={this.props.params.projectName}
+                modelName={this.props.params.modelName}
               />
             ))
           ) : (
@@ -224,6 +226,8 @@ class AddType extends React.Component<Props, State> {
               permissions={[]}
               hideBorder={true}
               create
+              projectName={this.props.params ? this.props.params.projectName : undefined}
+              modelName={this.props.params ? this.props.params.modelName : undefined}
             />
           )}
         </div>
@@ -261,7 +265,7 @@ class AddType extends React.Component<Props, State> {
                 }}
                 steps={[{
                   step: 'STEP1_CREATE_POST_MODEL',
-                  title: `Save the Model "Post"`,
+                  title: `Save the "Post" Type`,
                 }]}
                 offsetX={15}
                 offsetY={5}
@@ -368,23 +372,30 @@ class AddType extends React.Component<Props, State> {
 
   private addModel = (modelName: string, description: string) => {
     if (modelName) {
+      let newModelName = modelName
+      if (
+        this.props.gettingStartedState.isCurrentStep('STEP1_CREATE_POST_MODEL') &&
+        modelName.toLowerCase() === 'post'
+      ) {
+        newModelName = 'Post'
+      }
       Relay.Store.commitUpdate(
         new AddModelMutation({
           description,
-          modelName,
+          modelName: newModelName,
           projectId: this.props.projectId,
         }),
         {
           onSuccess: () => {
-            tracker.track(ConsoleEvents.Schema.Model.created({modelName}))
+            tracker.track(ConsoleEvents.Schema.Model.created({modelName: newModelName}))
             if (
-              modelName === 'Post' &&
+              newModelName === 'Post' &&
               this.props.gettingStartedState.isCurrentStep('STEP1_CREATE_POST_MODEL')
             ) {
               this.props.showDonePopup()
               this.props.nextStep()
             }
-            tracker.track(ConsoleEvents.Schema.Model.Popup.submitted({type: 'Create', name: modelName}))
+            tracker.track(ConsoleEvents.Schema.Model.Popup.submitted({type: 'Create', name: newModelName}))
             this.close()
           },
           onFailure: (transaction) => {

@@ -41,10 +41,6 @@ export function toggleNewRow(fields: Field[], modelNamePlural: string): ReduxThu
         row: -1,
         field: firstNonReadonlyField.name,
       }))
-
-      if (step === 'STEP3_CLICK_ADD_NODE1') {
-        dispatch(nextStep())
-      }
     }
 
     dispatch({
@@ -127,11 +123,6 @@ export function editCell(position: GridPosition): ReduxAction {
 
 export function stopEditCell(): ReduxThunk {
   return (dispatch, getState) => {
-    const dataBrowserView = document.getElementById('data-browser-view')
-    if (dataBrowserView) {
-      dataBrowserView.focus()
-    }
-
     dispatch({
       type: Constants.STOP_EDIT_CELL,
     })

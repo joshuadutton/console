@@ -1,6 +1,7 @@
 exports[`test JsonCell renders 1`] = `
 <textarea
   autoFocus={true}
+  className="mono"
   defaultValue="{}"
   onBlur={[Function]}
   onKeyDown={[Function]}

@@ -1,17 +1,19 @@
 import * as cookiestore from 'cookiestore'
 import * as React from 'react'
-import * as Relay from 'react-relay'
-import {Route, IndexRoute, IndexRedirect, Redirect} from 'react-router'
+import * as Relay from 'react-relay/classic'
+import { Route, IndexRoute, IndexRedirect, Redirect } from 'react-router'
 import Loading from './components/Loading/Loading'
 import RedirectOnMount from './components/RedirectOnMount/RedirectOnMount'
 import ActionsView from './views/ActionsView/ActionsView'
-import LoginView from './views/LoginView/LoginView'
+import AuthView from './views/AuthView/AuthView'
+import CLIAuthView from './views/CLIAuthView/CLIAuthView/CLIAuthView'
+import CLIAuthSuccessInitView from './views/CLIAuthView/CLIAuthSuccessInitView/CLIAuthSuccessInitView'
+import CLIAuthSuccessView from './views/CLIAuthView/CLIAuthSuccessView'
 import ProjectRootView from './views/ProjectRootView/ProjectRootView'
 import RootRedirectView from './views/ProjectRootView/RootRedirectView'
 import TokenRedirectView from './views/ProjectRootView/TokenRedirectView'
 import ProjectSettingsView from './views/ProjectSettingsView/ProjectSettingsView'
 import RootView from './views/RootView/RootView'
-import SignUpView from './views/SignUpView/SignUpView'
 import AfterSignUpView from './views/AfterSignUpView/AfterSignUpView'
 import AccountView from './views/account/AccountView/AccountView'
 import SettingsTab from './views/account/AccountView/SettingsTab'
@@ -25,23 +27,36 @@ import Team from './views/Settings/Team/Team'
 import Billing from './views/Settings/Billing/Billing'
 import ModelRedirectView from './views/models/ModelRedirectView'
 import FieldPopup from './views/models/FieldPopup/FieldPopup'
-import SchemaView from './views/models/SchemaView/SchemaView'
 import AuthProviderPopup from './views/models/AuthProviderPopup/AuthProviderPopup'
 import PlaygroundView from './views/playground/PlaygroundView/PlaygroundView'
 import PermissionsView from './views/PermissionsView/PermissionsView'
-import {EditPermissionPopup, AddPermissionPopup} from './views/PermissionsView/PermissionPopup/PermissionPopup'
+import { EditPermissionPopup, AddPermissionPopup } from './views/PermissionsView/PermissionPopup/PermissionPopup'
+import {
+  EditRelationPermissionPopup,
+  AddRelationPermissionPopup,
+} from './views/PermissionsView/RelationPermissionPopup/RelationPermissionPopup'
 import CloneProjectPopup from './views/ProjectRootView/CloneProjectPopup'
 import AlgoliaView from './views/Integrations/Algolia/AlgoliaView'
 import ShowRoom from './views/ShowRoom/ShowRoom'
 import IntegrationsView from './views/Integrations/IntegrationsView'
 import tracker from './utils/metrics'
-import {ConsoleEvents} from 'graphcool-metrics'
+import { ConsoleEvents } from 'graphcool-metrics'
 import RelationPopup from './views/RelationsPopup/RelationPopup'
 import ChangePricingPlan from './views/Settings/Billing/ChangePricingPlan'
 import ConfirmPricingPlan from './views/Settings/Billing/ConfirmPricingPlan'
 import ImportSchemaView from './views/ImportSchemaView/ImportSchemaView'
 import NewSchemaView from './views/SchemaView/SchemaView'
 import SchemaViewer from './views/SchemaView/SchemaViewer'
+import AllRelationPermissionsList from './views/PermissionsView/RelationPermissionsList/AllRelationPermissionsList'
+import PermissionsList from './views/PermissionsView/PermissionsList/PermissionsList'
+import FunctionsView from './views/FunctionsView/FunctionsView'
+import {
+  CreateFunctionPopup, EditCustomQueryFunctionPopup,
+  EditRPFunctionPopup, EditSchemaExtensionFunctionPopup,
+  EditSSSFunctionPopup,
+} from './views/FunctionsView/FunctionPopup/FunctionPopup'
+import { FunctionLogs } from './views/FunctionsView/FunctionLogs/FunctionLogs'
+import CliInfoPopup from './views/SchemaView/CliInfoPopup'
 
 const ViewerQuery = {
   viewer: (Component, variables) => Relay.QL`
@@ -83,6 +98,13 @@ function getLoadingColor(routes) {
 /* eslint-disable react/prop-types */
 const render = ({error, props, routerProps, element, ...rest}) => {
   if (error) {
+    if (error.message && error.message === 'Failed to fetch' && location.pathname === '/') {
+      cookiestore.remove('graphcool_auth_token')
+      cookiestore.remove('graphcool_customer_id')
+      window.location.pathname = '/'
+      return null
+    }
+
     const err = error.source.errors[0]
 
     tracker.track(ConsoleEvents.unexpectedError({error: JSON.stringify(err)}))
@@ -93,20 +115,29 @@ const render = ({error, props, routerProps, element, ...rest}) => {
       tracker.reset()
 
       return (
-        <RedirectOnMount to='/login'/>
+        <RedirectOnMount to={`/login${routerProps.location.search}`} />
+      )
+    }
+
+    // if the project doesn't exist on this account
+    if (err.code === 4033) {
+      graphcoolAlert('The requested project doesn\'t exist on your account.')
+
+      return (
+        <RedirectOnMount to={`/`} />
       )
     }
 
     if (routerProps && routerProps.params.projectName && routerProps.params.modelName) {
       // if we have a model and a project, there might be only a problem with the model, so redirect to project
       return (
-        <RedirectOnMount to={`/${routerProps.params.projectName}`}/>
+        <RedirectOnMount to={`/${routerProps.params.projectName}`} />
       )
     }
 
     return (
       // TODO https://github.com/relay-tools/react-router-relay/issues/156
-      <RedirectOnMount to='/'/>
+      <RedirectOnMount to={`/${routerProps.params.projectName}`} />
     )
   }
 
@@ -123,7 +154,7 @@ const render = ({error, props, routerProps, element, ...rest}) => {
           @p: .top0, .left0, .right0, .bottom0, .fixed, .flex, .justifyCenter, .itemsCenter, .z999;
         }
       `}</style>
-      <Loading color={color} />
+      <Loading color={color}/>
     </div>
   )
 }
@@ -132,68 +163,135 @@ export default (
   <Route path='/' component={RootView}>
     <IndexRoute component={RootRedirectView} queries={ViewerQuery} render={render}/>
     <Route path='token' component={TokenRedirectView}/>
-    <Route path='login' component={LoginView} render={render}/>
+    <Route path='cli/auth' component={CLIAuthView} onEnter={CLIAuthView.routeRedirectWhenAuthenticated}/>
+    <Route path='cli/auth/success' component={CLIAuthSuccessView} />
+    <Route path='cli/auth/success-init' component={CLIAuthSuccessInitView}/>
     <Route path='reset-password' component={ResetPasswordView}/>
-    <Route path='signup' component={SignUpView}/>
-    <Route path='after-signup' component={AfterSignUpView} queries={ViewerQuery} render={render} />
+    <Route path='signup' component={({location}) => <AuthView initialScreen='signUp' location={location} />}/>
+    <Route path='login' component={({location}) => <AuthView initialScreen='login' location={location} />}/>
+    <Route path='after-signup' component={AfterSignUpView} queries={ViewerQuery} render={render}/>
     <Route path='showroom' component={ShowRoom}/>
     <Route path=':projectName' component={ProjectRootView} queries={ViewerQuery} render={render}>
       <IndexRedirect to='schema'/>
-      <Redirect from='settings' to='settings/general' />
+      <Redirect from='settings' to='settings/general'/>
+      <Route path='token' component={TokenRedirectView}/>
       <Route path='settings' component={Settings} render={render}>
-        <Route path='general' component={General} queries={ViewerQuery} render={render} />
-        <Route path='authentication' component={Authentication} queries={ViewerQuery} render={render} />
-        <Route path='export' component={Export} queries={ViewerQuery} render={render} />
-        <Route path='billing' component={Billing} queries={ViewerQuery} render={render} >
-          <Route path='change-plan/:plan' component={ChangePricingPlan} render={render} />
-          <Route path='confirm-plan/:plan' component={ConfirmPricingPlan} queries={ViewerQuery} render={render} />
+        <Route path='general' component={General} queries={ViewerQuery} render={render}/>
+        <Route path='authentication' component={Authentication} queries={ViewerQuery} render={render}/>
+        <Route path='export' component={Export} queries={ViewerQuery} render={render}/>
+        <Route path='billing' component={Billing} queries={ViewerQuery} render={render}>
+          <Route path='change-plan/:plan' component={ChangePricingPlan} render={render}/>
+          <Route path='confirm-plan/:plan' component={ConfirmPricingPlan} queries={ViewerQuery} render={render}/>
         </Route>
-        <Route path='team' component={Team} queries={ViewerQuery} render={render} />
+        <Route path='team' component={Team} queries={ViewerQuery} render={render}/>
       </Route>
       <Route path='clone' component={CloneProjectPopup} queries={ViewerQuery} render={render}/>
+      <Route path='functions' component={FunctionsView} queries={ViewerQuery} render={render}>
+        <Route path='create' component={CreateFunctionPopup} queries={ViewerQuery} render={render}>
+          <Route
+            path='fullscreen'
+            component={null}
+          />
+        </Route>
+        <Route
+          path=':id/logs'
+          component={FunctionLogs}
+          queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+          render={render}
+        />
+        <Route
+          path=':id/sss/edit'
+          component={EditSSSFunctionPopup}
+          queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+          render={render}
+        >
+          <Route
+            path='fullscreen'
+            component={null}
+          />
+        </Route>
+        <Route
+          path=':id/rp/edit'
+          component={EditRPFunctionPopup}
+          queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+          render={render}
+        >
+          <Route
+            path='fullscreen'
+            component={null}
+          />
+        </Route>
+        <Route
+          path=':id/schema_extension/edit'
+          component={EditSchemaExtensionFunctionPopup}
+          queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+          render={render}
+        >
+          <Route
+            path='fullscreen'
+            component={null}
+          />
+        </Route>
+      </Route>
       <Route path='account' component={AccountView} queries={ViewerQuery} render={render}>
         <Route path='settings' component={SettingsTab} queries={ViewerQuery} render={render}/>
         <IndexRedirect to='settings'/>
       </Route>
       <Route path='schema' component={NewSchemaView} queries={ViewerQuery} render={render} loadingColor='white'>
-        <Route path='all' component={null} render={render} />
-        <Route path='types' component={null} render={render} />
-        <Route path='interfaces' component={null} render={render} />
-        <Route path='enums' component={null} render={render} />
+        <Route path='cli-guide' component={CliInfoPopup} render={render}/>
+        <Route path='types' component={null} render={render}/>
+        <Route path='interfaces' component={null} render={render}/>
+        <Route path='enums' component={null} render={render}>
+          <Route path='edit/:enumName' component={null} render={render}/>
+        </Route>
         <Route path='relations'>
-          <Route path='create' component={RelationPopup} queries={ViewerQuery}  render={render}/>
+          <Route path='create' component={RelationPopup} queries={ViewerQuery} render={render}/>
           <Route path='edit/:relationName' component={RelationPopup} queries={ViewerQuery} render={render}/>
         </Route>
         <Route path=':modelName'>
-          <Route path='edit' component={null} render={render} />
-          <Route path='edit/:fieldName' component={FieldPopup} queries={ViewerQuery} render={render} />
-          <Route path='create' component={FieldPopup} queries={ViewerQuery} render={render}/>
-        </Route>
-      </Route>
-      <Route path='graph-view' component={SchemaViewer} queries={ViewerQuery} render={render} />
-      <Route path='models'>
-        <IndexRoute component={ModelRedirectView} queries={ViewerQuery} render={render}/>
-        <Route path=':modelName/schema' component={SchemaView} queries={ViewerQuery} render={render}>
+          <Route path='edit' component={null} render={render}/>
           <Route path='edit/:fieldName' component={FieldPopup} queries={ViewerQuery} render={render}/>
           <Route path='create' component={FieldPopup} queries={ViewerQuery} render={render}/>
         </Route>
+      </Route>
+      <Route path='graph-view' component={SchemaViewer} queries={ViewerQuery} render={render}/>
+      <Route path='models'>
+        <IndexRoute component={ModelRedirectView} queries={ViewerQuery} render={render}/>
         <Route path=':modelName/databrowser' component={DatabrowserView} queries={ViewerQuery} render={render}/>
         <Route path=':modelName' component={ModelRedirectView} queries={ViewerQuery} render={render}/>
       </Route>
       <Route path='permissions' component={PermissionsView} queries={ViewerQuery} render={render}>
-        <Route
-          path=':modelName/edit/:id'
-          component={EditPermissionPopup}
-          queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
-          render={render}/>
-        <Route path=':modelName/create' component={AddPermissionPopup} queries={ViewerQuery} render={render}/>
+        <IndexRoute component={PermissionsList}/>
+        <Route path='relations' component={AllRelationPermissionsList}>
+          <Route
+            path=':relationName/edit/:id'
+            component={EditRelationPermissionPopup}
+            queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+            render={render}
+          />
+          <Route
+            path=':relationName/create'
+            component={AddRelationPermissionPopup}
+            queries={ViewerQuery}
+            render={render}
+          />
+        </Route>
+        <Route component={PermissionsList}>
+          <Route
+            path=':modelName/edit/:id'
+            component={EditPermissionPopup}
+            queries={{node: NodeQuery.node, viewer: ViewerQuery.viewer}}
+            render={render}
+          />
+          <Route path=':modelName/create' component={AddPermissionPopup} queries={ViewerQuery} render={render}/>
+        </Route>
       </Route>
       <Route path='actions' component={ActionsView} queries={ViewerQuery} render={render}/>
       <Route path='playground' component={PlaygroundView} queries={ViewerQuery} render={render}/>
       <Route path='settings' component={ProjectSettingsView} queries={ViewerQuery} render={render}/>
       <Route path='algolia' component={AlgoliaView} queries={ViewerQuery} render={render}/>
       <Route path='integrations' component={IntegrationsView} queries={ViewerQuery} render={render}>
-        <Route path='authentication/:provider' component={AuthProviderPopup} queries={ViewerQuery} render={render} />
+        <Route path='authentication/:provider' component={AuthProviderPopup} queries={ViewerQuery} render={render}/>
       </Route>
     </Route>
   </Route>

@@ -7,7 +7,9 @@
     "sourceMap": true,
     "target": "es2015",
     "outDir": "lib",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "allowJs": true,
+    "lib": ["ES2017", "DOM"]
   },
   "exclude": [
     "node_modules",

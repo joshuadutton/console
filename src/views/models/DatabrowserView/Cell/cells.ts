@@ -1,4 +1,4 @@
-import {Field} from '../../../../types/types'
+import { Enum, Field } from '../../../../types/types'
 import {TypedValue} from '../../../../types/utils'
 
 export interface CellProps<T> {
@@ -8,6 +8,7 @@ export interface CellProps<T> {
   onKeyDown?: (event: any) => void,
   field?: Field,
   inList?: boolean
+  enums?: Enum[]
 }
 
 export interface CellState {

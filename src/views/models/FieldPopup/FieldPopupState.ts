@@ -41,7 +41,8 @@ export function isValid(nodeCount: number, mutatedField: Field, initialField?: F
   errors.migrationValueMissing = (!migrationUI.migrationOptional && migrationUI.showMigration)
     && (typeof mutatedField.migrationValue === 'undefined')
 
-  errors.enumValueMissing = mutatedField.typeIdentifier === 'Enum' && mutatedField.enumValues.length === 0
+  // errors.enumValueMissing = mutatedField.typeIdentifier === 'Enum' && mutatedField.enumValues.length === 0
+  errors.enumValueMissing = false
 
   return errors
 }
@@ -59,7 +60,6 @@ export function isBreaking(nodeCount: number, mutatedField: Field, initialField?
   if (
     initialField.isList !== mutatedField.isList ||
     (initialField.isUnique && !mutatedField.isUnique) ||
-    valuesMissing(initialField.enumValues, mutatedField.enumValues) || // only breaking, when values are missing
     initialField.name !== mutatedField.name ||
     initialField.typeIdentifier !== mutatedField.typeIdentifier
   ) {
@@ -93,8 +93,8 @@ export function didChange(mutatedField: Field, initialField?: Field): boolean {
 export function updateTypeIdentifier(state: Field, typeIdentifier: FieldType): Field {
   return {
     ...state,
-    defaultValue: undefined,
-    migrationValue: undefined,
+    defaultValue: null,
+    migrationValue: null,
     typeIdentifier,
   }
 }
@@ -136,10 +136,10 @@ export function updateDescription(state: Field, description: string): Field {
   }
 }
 
-export function updateEnumValues(state: Field, enumValues: string[]): Field {
+export function updateEnumId(state: Field, enumId: string): Field {
   return {
     ...state,
-    enumValues,
+    enumId,
   }
 }
 
@@ -216,8 +216,20 @@ export function getMigrationUI(nodeCount: number, mutatedField: Field, initialFi
     }
   }
 
+  // if a field is changed from non-required to required and contains nodes,
+  // it depends on a node-by-node basis if a migration value is needed
+  // this is something the backend has to figure out, so we're accepting switching to required
+  // even without checking
   if (
-    (!initialField.isRequired && mutatedField.isRequired) ||
+    (!initialField.isRequired && mutatedField.isRequired)
+  ) {
+    return {
+      showMigration: true,
+      migrationOptional: true,
+    }
+  }
+
+  if (
     (initialField.typeIdentifier !== mutatedField.typeIdentifier) ||
     (initialField.isList !== mutatedField.isList)
   ) {

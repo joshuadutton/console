@@ -21,11 +21,12 @@ export interface Customer {
   id: string
   name: string
   email: string
+  createdAt: string
   projects: RelayConnection<Project>
   crm: CrmSystemBridge
 }
 
-export type SeatStatus = 'JOINED' | 'INVITED_PROJECT' | 'INVITED_CUSTOMER'
+export type SeatStatus = 'JOINED' | 'INVITED_PROJECT' | 'INVITED_CUSTOMER' | 'INVITED_TO_PROJECT'
 
 export interface Seat {
   name: string | null
@@ -45,6 +46,7 @@ export interface CrmCustomerInformation {
   id: string
   name: string
   email: string
+  isBeta: boolean
 }
 
 export type Environment = 'Node' | 'Browser'
@@ -63,6 +65,7 @@ export interface Project {
   id: string
   name: string
   alias: string
+  version: number
   models: RelayConnection<Model>
   relations: RelayConnection<Relation>
   actions: RelayConnection<Action>
@@ -71,8 +74,75 @@ export interface Project {
   integrations: RelayConnection<Integration>
   actionSchema: string
   schema: string
+  typeSchema: string
+  enumSchema: string
   seats: RelayConnection<Seat>
   projectBillingInformation: ProjectBillingInformation
+  region?: string
+  packageDefinitions: RelayConnection<PackageDefinition>
+  functions: RelayConnection<ServerlessFunction>
+  systemProjectId: string
+  enums: RelayConnection<Enum>
+}
+
+export interface ServerlessFunction {
+  __typename?: string
+  id: string
+  name: string
+  type?: FunctionType
+  binding?: FunctionBinding
+  webhookUrl: string
+  _inlineWebhookUrl?: string
+  _webhookUrl?: string
+  webhookHeaders: string
+  _webhookHeaders?: {[key: string]: string}
+  inlineCode?: string
+  auth0Id?: string
+  logs: RelayConnection<Log>
+  stats?: FunctionStats
+  modelId?: string
+  model?: Model
+  operation?: RequestPipelineMutationOperation
+  isActive: boolean
+  query?: string
+  schema?: string
+  schemaExtension?: string
+}
+
+export interface FunctionStats {
+  requestHistogram: number[]
+  requestCount: number
+  errorCount: number
+  lastRequest: Date
+}
+
+export type RequestPipelineMutationOperation = 'CREATE' | 'UPDATE' | 'DELETE'
+
+export interface Log {
+  id: string
+  requestId: string
+  duration: number
+  status: LogStatus
+  timestamp: Date
+  message: string
+}
+
+export type LogStatus = 'SUCCESS' | 'FAILURE'
+
+export interface RequestPipelineMutationFunction extends ServerlessFunction {
+  model: Model
+  binding: FunctionBinding
+}
+
+export type FunctionType = 'WEBHOOK' | 'AUTH0'
+
+export type FunctionBinding = 'TRANSFORM_ARGUMENT' | 'PRE_WRITE' | 'TRANSFORM_PAYLOAD'
+
+export interface PackageDefinition {
+  id: string
+  definition: string
+  email: string
+  name: string
 }
 
 export interface ProjectBillingInformation {
@@ -128,11 +198,12 @@ export interface Field {
   isRequired: boolean
   isList: boolean
   isUnique: boolean
+  enumId?: string
+  enum?: Enum
   isSystem?: boolean
   isReadonly?: boolean
   typeIdentifier?: FieldType
   defaultValue?: TypedValue
-  enumValues: string[]
   reverseRelationField?: Field
   relatedModel?: Model
   relation?: Relation
@@ -150,16 +221,26 @@ interface Interface {
 export interface Relation {
   id: string
   name: string
+  isRequired: boolean
   description?: string
   leftModel: Model
   rightModel: Model
   fieldOnLeftModel: Field
   fieldOnRightModel: Field
+  permissionSchema: string
+  permissions: RelayConnection<RelationPermission>
+  permissionQueryArguments: PermissionQueryArgument[]
 }
 
 export type UserType = 'EVERYONE' | 'AUTHENTICATED'
 
 export type PermissionRuleType = 'NONE' | 'GRAPH' | 'WEBHOOK'
+
+export interface Enum {
+  id: string
+  name: string
+  values: string[]
+}
 
 export interface Model {
   id: string
@@ -191,6 +272,18 @@ export interface ModelPermission {
   applyToWholeModel: boolean
   isActive: boolean
   operation: Operation
+  userType: UserType
+}
+
+export interface RelationPermission {
+  id: string
+  connect: boolean
+  disconnect: boolean
+  ruleWebhookUrl?: string
+  rule: Rule
+  ruleName?: string
+  ruleGraphQuery?: string
+  isActive: boolean
   userType: UserType
 }
 
@@ -236,6 +329,7 @@ export interface ActionHandlerWebhook {
 
 export interface User {
   id: string
+  createdAt?: string
 }
 
 export interface Node {
@@ -257,7 +351,8 @@ export interface AuthProvider {
   auth0: AuthProviderAuth0 | null
 }
 
-export type AuthProviderType = 'AUTH_PROVIDER_EMAIL' | 'AUTH_PROVIDER_DIGITS' | 'AUTH_PROVIDER_AUTH0'
+export type AuthProviderType = 'AUTH_PROVIDER_EMAIL' | 'AUTH_PROVIDER_DIGITS'
+  | 'AUTH_PROVIDER_AUTH0' | 'anonymous-auth-provider'
 
 export interface AuthProviderAuth0 {
   domain: string
@@ -318,6 +413,8 @@ export interface PricingPlanInfo {
 }
 
 export type CreditCardInputDisplayState = 'CREDIT_CARD_DATA' | 'ADDRESS_DATA'
+
+export type Region = 'EU_WEST_1' | 'AP_NORTHEAST_1' | 'US_WEST_2'
 
 export interface PermissionVariable {
   name: string

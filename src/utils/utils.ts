@@ -155,5 +155,13 @@ export const idToBeginning = (a: Field, b: Field) => {
     return 1
   }
 
+  if (a.name === 'description' && b.name === 'imageUrl') {
+    return 1
+  }
+
+  if (a.name === 'imageUrl' && b.name === 'description') {
+    return -1
+  }
+
   return a.name > b.name ? 1 : -1
 }

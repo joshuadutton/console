@@ -13,7 +13,7 @@ export default class TypeTag extends React.Component<Props, null> {
   render() {
     const {field, big} = this.props
 
-    let type: string = field.typeIdentifier
+    let type: string = isScalar(field.typeIdentifier) ? field.typeIdentifier : field.relatedModel.name
     if (field.isList) {
       type = `[${type}]`
     }
@@ -55,11 +55,7 @@ export default class TypeTag extends React.Component<Props, null> {
           />
         )}
         <span>
-          {isScalar(field.typeIdentifier) ? (
-            type
-          ) : (
-            field.relatedModel.name
-          )}
+          {type}
         </span>
       </div>
     )

@@ -15,7 +15,6 @@ const testField: Field = {
   isUnique: false,
   isSystem: false,
   typeIdentifier: 'Int',
-  enumValues: [],
   model: null,
 }
 

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {getModelName, getModelNamePlural} from '../../utils/namegetter'
 import {Project} from '../../types/types'
 const classes: any = require('./RelationExplanation.scss')

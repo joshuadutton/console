@@ -47,7 +47,11 @@ class DeleteNodeRow extends React.Component<Props, State> {
             <div className={`${classes.button}`} onClick={this.props.clearNodeSelection}>
               <span>Cancel</span>
             </div>
-            <div className={`${classes.button} ${classes.red}`} onClick={this.props.deleteSelectedNodes}>
+            <div
+              className={`${classes.button} ${classes.red}`}
+              onClick={this.props.deleteSelectedNodes}
+              data-test='delete-button'
+            >
               <span>Delete</span>
             </div>
         </div>

@@ -19,7 +19,7 @@ const VariableTag = ({onClick, variable, active, className}: Props) => {
     >
       <style jsx>{`
         .variable-tag {
-          @p: .br2, .white30, .inlineFlex, .itemsCenter, .pointer;
+          @p: .br2, .white30, .flex, .itemsCenter, .pointer;
           padding: 6px 6px 6px 9px;
         }
         .variable-tag.active {

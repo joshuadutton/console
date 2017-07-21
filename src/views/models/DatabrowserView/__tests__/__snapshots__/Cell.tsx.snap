@@ -1,6 +1,7 @@
 exports[`test Cell renders and runs selectCell 1`] = `
 <div
   className="root"
+  data-test="cell-description"
   onClick={[Function]}
   onDoubleClick={[Function]}
   style={
@@ -28,6 +29,7 @@ exports[`test Cell renders and runs selectCell 1`] = `
 exports[`test Cell renders in edit mode 1`] = `
 <div
   className="root"
+  data-test="cell-description"
   onClick={[Function]}
   onDoubleClick={[Function]}
   style={

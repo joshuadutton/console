@@ -9,12 +9,14 @@ import CopyToClipboard from 'react-copy-to-clipboard'
 import * as cx from 'classnames'
 import tracker from '../../utils/metrics'
 import {ConsoleEvents} from 'graphcool-metrics'
+import getSubscriptionEndpoint from '../../utils/region'
 
 interface Props {
   id: string
   projectId: string
   closePopup: (id: string) => ReduxAction
   alias: string
+  region: string
 }
 
 interface State {
@@ -153,13 +155,13 @@ class EndpointPopup extends React.Component<Props, State> {
     `
 
     const {endpoint, copied} = this.state
-    const {projectId, alias} = this.props
+    const {projectId, alias, region} = this.props
 
     const aliasOrId = (alias && alias.length > 0) ? alias : projectId
 
     let url = `https://api.graph.cool/${endpoint}/${aliasOrId}`
     if (endpoint.includes('subscription')) {
-      url = `wss://subscriptions.graph.cool/v1/${aliasOrId}`
+      url = getSubscriptionEndpoint(region) + `/v1/${aliasOrId}`
     }
 
     return (

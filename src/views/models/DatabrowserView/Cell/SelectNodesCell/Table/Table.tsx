@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { InfiniteLoader, Table, Column } from 'react-virtualized'
 import {Model} from '../../../../../../types/types'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {calculateFieldColumnWidths} from '../../../../utils'
 import headerRenderer from './headerRenderer'
 import {Icon} from 'graphcool-styles'

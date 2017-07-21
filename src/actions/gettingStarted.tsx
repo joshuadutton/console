@@ -1,5 +1,5 @@
 import * as React from 'react' // tslint:disable-line
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Example} from '../types/types'
 import {Dispatch, StateTree, ReduxThunk, ReduxAction} from '../types/reducers'
 import {GettingStartedState, Step} from './../types/gettingStarted'
@@ -14,14 +14,6 @@ export function showDonePopup() {
   const id = cuid()
   const element = <IconNotification id={id}/>
   return showPopup({id, element, blurBackground: false})
-}
-
-export function selectExample(selectedExample: Example): (dispatch: (action: ReduxAction) => any, getState: any) => Promise<{}> { // tslint:disable-line
-  return (dispatch: (action: ReduxAction) => any, getState): Promise<{}> => {
-    const {onboardingStatusId} = getState().gettingStarted.gettingStartedState
-    const step: Step = 'STEP5_WAITING'
-    return updateReduxAndRelay(dispatch, step, false, onboardingStatusId, selectedExample)
-  }
 }
 
 export function update(step: Step,
@@ -73,13 +65,6 @@ export function nextStep(): ReduxThunk {
     const {step, skipped, onboardingStatusId, selectedExample} = getState().gettingStarted.gettingStartedState
     const currentStepIndex = GettingStartedState.steps.indexOf(step)
     const nextStep = GettingStartedState.steps[currentStepIndex + 1]
-
-    if (nextStep === 'STEP3_CLICK_SAVE_NODE1') {
-      const dataBrowserWrapper = document.getElementById('data-browser-view-wrapper')
-      if (dataBrowserWrapper) {
-        dataBrowserWrapper.scrollLeft = window.innerWidth
-      }
-    }
 
     return updateReduxAndRelay(dispatch, nextStep, skipped, onboardingStatusId, selectedExample)
   }

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {ModelPermission, Model} from '../../../../types/types'
 import {$p, variables, Icon} from 'graphcool-styles'
 import * as cx from 'classnames'
@@ -57,6 +57,7 @@ class ModelPermissionComponent extends React.Component<Props, {}> {
         <Link
           className={cx($p.flex, $p.flexRow, $p.overflowHidden, $p.flex1, $p.itemsCenter)}
           to={`/${projectName}/permissions/${model.name}/edit/${permission.id}`}
+          data-test={`edit-permission-button-${model.name}`}
         >
           <PermissionType className={cx(
             $p.flex,
@@ -65,7 +66,7 @@ class ModelPermissionComponent extends React.Component<Props, {}> {
             $p.justifyBetween,
             $p.relative,
           )}>
-            <h3 className={cx($p.black50, $p.f16, $p.fw6)}>
+            <h3 className={cx($p.black50, $p.f16, $p.fw6)} data-test='permission-row-label'>
               {permission.userType === 'EVERYONE' ? 'Everyone' : 'Authenticated'}
             </h3>
             <Arrow className={cx(

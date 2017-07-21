@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {$p} from 'graphcool-styles'
 import Icon from 'graphcool-styles/dist/components/Icon/Icon'
 import * as cx from 'classnames'

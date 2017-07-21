@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {Model} from '../../../types/types'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import FieldItem from './FieldItem'
 import {Link} from 'react-router'
 import {Icon, $v} from 'graphcool-styles'
@@ -266,7 +266,6 @@ class TypeBox extends React.Component<Props,State> {
                   <Link
                     to={`/${projectName}/models/${model.name}/databrowser`}
                     className='simple-button'
-                    onClick={this.handleDatabrowserClick}
                   >
                     <Icon
                       src={require('assets/icons/databrowser.svg')}
@@ -279,7 +278,6 @@ class TypeBox extends React.Component<Props,State> {
               <Link
                 to={`/${projectName}/models/${model.name}/databrowser`}
                 className='simple-button'
-                onClick={this.handleDatabrowserClick}
               >
                 <Icon
                   src={require('assets/icons/databrowser.svg')}
@@ -330,7 +328,11 @@ class TypeBox extends React.Component<Props,State> {
                   horizontal='left'
                   zIndex={2}
                 >
-                  <Link to={`/${projectName}/schema/${model.name}/create`} onClick={this.handleCreateFieldClick}>
+                  <Link
+                    to={`/${projectName}/schema/${model.name}/create`}
+                    onClick={this.handleCreateFieldClick}
+                    data-test={model.name === 'Post' ? 'add-post-field' : ''}
+                  >
                     <div className='add-button'>
                       <Icon
                         src={require('assets/icons/addField.svg')}
@@ -407,14 +409,11 @@ class TypeBox extends React.Component<Props,State> {
     )
   }
 
-  private handleDatabrowserClick = () => {
-    if (this.props.gettingStartedState.isCurrentStep('STEP3_CLICK_DATA_BROWSER')) {
-      this.props.nextStep()
-    }
-  }
-
   private handleCreateFieldClick = () => {
-    if (this.props.gettingStartedState.isCurrentStep('STEP2_CLICK_CREATE_FIELD_IMAGEURL')) {
+    if (
+      this.props.gettingStartedState.isCurrentStep('STEP2_CLICK_CREATE_FIELD_IMAGEURL') ||
+      this.props.gettingStartedState.isCurrentStep('STEP2_CREATE_FIELD_DESCRIPTION')
+    ) {
       this.props.nextStep()
     }
   }
@@ -430,6 +429,9 @@ class TypeBox extends React.Component<Props,State> {
   }
 
   private editModelName = e => {
+    if (this.props.model.isSystem) {
+      return
+    }
     if (this.props.model.itemCount === 0) {
       this.setState({editingModelName: true} as State)
     } else {

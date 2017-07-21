@@ -1,4 +1,4 @@
-import {Field} from '../../../../types/types'
+import { Enum, Field } from '../../../../types/types'
 import * as React from 'react'
 import IntCell from './IntCell'
 import FloatCell from './FloatCell'
@@ -26,6 +26,7 @@ export interface CellRequirements {
     cancel: (reload?: boolean) => void
     onKeyDown: (e: React.KeyboardEvent<HTMLSelectElement | HTMLInputElement>, what?: boolean) => void,
   }
+  enums: Enum[]
 }
 
 export function getEditCell(reqs: CellRequirements): JSX.Element {
@@ -80,23 +81,13 @@ function getNonScalarEditCell(reqs: CellRequirements): JSX.Element {
       endpointUrl={`${__BACKEND_ADDR__}/simple/v1/${reqs.projectId}`}
       projectId={reqs.projectId}
       model={reqs.field.relatedModel}
-      values={values}
       multiSelect={reqs.field.isList}
       save={reqs.methods.save}
       cancel={reqs.methods.cancel}
       field={reqs.field}
+      nodeId={reqs.nodeId}
     />
   )
-  // return (
-  //   <NodeSelector
-  //     relatedModel={reqs.field.relatedModel}
-  //     projectId={reqs.projectId}
-  //     value={reqs.value ? reqs.value.id : null}
-  //     onKeyDown={reqs.methods.onKeyDown}
-  //     save={reqs.methods.save}
-  //     cancel={reqs.methods.cancel}
-  //   />
-  // )
 }
 
 function getScalarListEditCell(reqs: CellRequirements): JSX.Element {
@@ -147,6 +138,7 @@ export function getScalarEditCell(reqs: CellRequirements): JSX.Element {
           onKeyDown={reqs.methods.onKeyDown}
           field={reqs.field}
           cancel={reqs.methods.cancel}
+          enums={reqs.enums}
         />
       )
     case 'String':

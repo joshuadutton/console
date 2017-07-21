@@ -1,12 +1,12 @@
 import {isScalar} from '../../utils/graphql'
-import {Field, FieldWidths} from '../../types/types'
+import { Enum, Field, FieldWidths } from '../../types/types'
 import {TypedValue, NonScalarValue, ScalarValue} from '../../types/utils'
 import {stringToValue, valueToString, getFieldTypeName} from '../../utils/valueparser'
 import calculateSize from 'calculate-size'
 import * as Immutable from 'immutable'
 import {isNonScalarList} from '../../utils/graphql'
 
-export function emptyDefault(field: Field): TypedValue {
+export function emptyDefault(field: Field, enums: Enum[]): TypedValue {
 
   if (field.isRequired) {
     return null
@@ -25,7 +25,8 @@ export function emptyDefault(field: Field): TypedValue {
       case 'Boolean':
         return false
       case 'Enum':
-        return field.enumValues.length > 0 ? field.enumValues[0] : null
+        const selectedEnum = enums.find(en => field.enum.id === en.id)
+        return selectedEnum.values[0]
       default:
         return null
     }
@@ -48,7 +49,7 @@ function valueToGQL(value: TypedValue, field: Field): string {
       // we can safely assume that it's a list at this point
       const values = value as any[]
       if (values.length === 0) {
-        return '"[]"'
+        return '[]'
       } else {
         return `[${values.map(v => `"${v.id}"`).join(',')}]`
       }
@@ -104,12 +105,12 @@ export function getFirstInputFieldIndex(fields: Field[]): number {
   }
 }
 
-export function getDefaultFieldValues(fields: Field[]): { [key: string]: any } {
+export function getDefaultFieldValues(fields: Field[], enums: Enum[]): { [key: string]: any } {
   return fields.filter((f) => f.name !== 'id')
     .mapToObject(
       (field) => field.name,
       (field) => ({
-        value: stringToValue(field.defaultValue, field) || emptyDefault(field),
+        value: stringToValue(field.defaultValue, field) || emptyDefault(field, enums),
         field: field,
       }),
     )

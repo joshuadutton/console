@@ -54,9 +54,15 @@ export class StringCell extends React.Component<CellProps<string>, State> {
             width: '100%',
           }}
           onBlur={(e: any) => {
+            if (this.enterPressed) {
+              this.stopEvent(e)
+              this.enterPressed = false
+              return
+            }
             this.props.save(stringToValue(e.target.value, this.props.field))
           }}
           onChange={this.onChange}
+          placeholder='Enter a String...'
         />
       ) : (
         <input
@@ -74,6 +80,7 @@ export class StringCell extends React.Component<CellProps<string>, State> {
             this.props.save(stringToValue(e.target.value, this.props.field))
           }}
           onChange={this.onChange}
+          placeholder='Enter a String...'
         />
       )
     )

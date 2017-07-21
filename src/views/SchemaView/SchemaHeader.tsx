@@ -8,11 +8,13 @@ import ComingSoonTag from './ComingSoonTag'
 interface Props {
   projectName: string
   location: any
+  typesChanged: boolean
+  enumsChanged: boolean
 }
 
 export default class SchemaHeader extends React.Component<Props,null> {
   render() {
-    const {projectName} = this.props
+    const {projectName, typesChanged, enumsChanged} = this.props
 
     return (
       <div className='schema-header'>
@@ -48,7 +50,7 @@ export default class SchemaHeader extends React.Component<Props,null> {
             @p: .flex, .itemsEnd;
           }
           .tab {
-            @p: .br2, .white30, .brTop, .ml10, .flex, .itemsCenter;
+            @p: .br2, .white30, .brTop, .ml10, .flex, .itemsCenter, .pointer;
             padding: 10px 13px;
           }
           .tab.active {
@@ -56,6 +58,9 @@ export default class SchemaHeader extends React.Component<Props,null> {
           }
           .tab.inactive {
             @p: .bgDarkerBlue;
+          }
+          .tab.inactive:hover {
+            @p: .bgDarkBlue;
           }
           .tab span {
             @p: .ttu, .fw6, .f16, .ml6;
@@ -102,14 +107,14 @@ export default class SchemaHeader extends React.Component<Props,null> {
           </Link>
            */}
           <Link to={`/${projectName}/schema/types`}>
-            <div className={'tab active types'/*this.tabClass('types')*/}>
+            <div className={this.tabClass('types')}>
               <Icon
                 src={require('graphcool-styles/icons/fill/types.svg')}
                 width={19}
                 height={18}
                 color={$v.white20}
               />
-              <span>Types</span>
+              <span>Types {typesChanged ? ' *' : ''}</span>
             </div>
           </Link>
           <div className={'coming-soon tab' /* + this.tabClass('interfaces')*/}>
@@ -122,16 +127,17 @@ export default class SchemaHeader extends React.Component<Props,null> {
             <span>Interfaces</span>
             <ComingSoonTag />
           </div>
-          <div className={'coming-soon tab' /* + this.tabClass('enums')*/}>
-            <Icon
-              src={require('graphcool-styles/icons/fill/enums.svg')}
-              width={23}
-              height={9}
-              color={$v.white20}
-            />
-            <span>Enums</span>
-            <ComingSoonTag />
-          </div>
+          <Link to={`/${projectName}/schema/enums`}>
+            <div className={this.tabClass('enums')}>
+              <Icon
+                src={require('graphcool-styles/icons/fill/enums.svg')}
+                width={23}
+                height={9}
+                color={$v.white20}
+              />
+              <span>Enums {enumsChanged ? ' *' : ''}</span>
+            </div>
+          </Link>
         </div>
         <div className='right'>
           <div className='info'>
@@ -163,7 +169,8 @@ export default class SchemaHeader extends React.Component<Props,null> {
 
   private tabClass(tabName: string) {
     let className = 'tab'
-    if (this.props.location.pathname.endsWith(`schema/${tabName}`)) {
+    const typesActive = tabName === 'types' ? this.props.location.pathname.endsWith('schema') : false
+    if (this.props.location.pathname.endsWith(`schema/${tabName}`) || typesActive) {
       className += ' active'
     } else {
       className += ' inactive'

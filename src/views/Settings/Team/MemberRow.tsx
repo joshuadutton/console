@@ -23,6 +23,7 @@ export default class MemberRow extends React.Component<Props, State> {
   }
 
   render() {
+    console.log(this.props.seat.status)
     return (
       <div
         className={`container ${this.state.isHovering && 'bgBlack02 br2'}`}
@@ -33,54 +34,55 @@ export default class MemberRow extends React.Component<Props, State> {
           this.setState({isHovering: false})
         }}
       >
-        <style jsx={true}>{`
+        <style jsx>{`
+          .container {
+            @inherit: .flex, .itemsCenter, .ph16, .mb16;
+            height: 69px;
+          }
 
-                .container {
-                  @inherit: .flex, .itemsCenter, .ph16, .mb16;
-                  height: 69px;
-                }
+          .blueCircle {
+            color: rgba(49,177,180,1);
+            background-color: rgba(49,177,180,.2);
+          }
 
-                .blueCircle {
-                  color: rgba(49,177,180,1);
-                  background-color: rgba(49,177,180,.2);
-                }
+          .violetCircle {
+            color: rgba(164,3,111,1);
+            background-color: rgba(164,3,111,.2);
+          }
 
-                .violetCircle {
-                  color: rgba(164,3,111,1);
-                  background-color: rgba(164,3,111,.2);
-                }
+          .orangeCircle {
+            color: rgba(241,143,1,1);
+            background-color: rgba(241,143,1,.2);
+          }
 
-                .orangeCircle {
-                  color: rgba(241,143,1,1);
-                  background-color: rgba(241,143,1,.2);
-                }
+          .redCircle {
+            color: rgba(242,92,84,1);
+            background-color: rgba(242,92,84,.2);
+          }
 
-                .redCircle {
-                  color: rgba(242,92,84,1);
-                  background-color: rgba(242,92,84,.2);
-                }
+          .greenCircle {
+            color: rgba(42,189,60,1);
+            background-color: rgba(42,189,60,.2);
+          }
 
-                .greenCircle {
-                  color: rgba(42,189,60,1);
-                  background-color: rgba(42,189,60,.2);
-                }
+          .seatIndicator {
+            @p: .flex, .justifyCenter, .itemsCenter, .br100, .wS38, .hS38, .fw6, .f20;
+          }
 
-                .seatIndicator {
-                  @p: .flex, .justifyCenter, .itemsCenter, .br100, .wS38, .hS38, .fw6, .f20;
-                }
+          .move {
+            transition: .15s linear all;
+          }
 
-                .move {
-                  transition: .15s linear all;
-                }
-
-              `}</style>
+        `}</style>
         <div className={`flex justifyBetween itemsCenter w100 ph10`}>
-          <div className='flex'>
+          <div className='flex itemsCenter'>
             <div className={`seatIndicator ${this.randomColor()}`}>
-              {this.props.seat.name.charAt(0)}
+              {this.props.seat.name ? this.props.seat.name.charAt(0) : this.props.seat.email.charAt(0)}
             </div>
-            <div className='pl16 black80 f25 fw3'>{this.props.seat.name}</div>
-            {this.isCurrentUser() && <div className='pl2 black50 f25 fw3'>(you)</div>}
+            <div className='pl16 black80 f20 fw3'>{this.props.seat.name}</div>
+            <div className='pl16 black40 f16 fw6'>{this.props.seat.email}</div>
+            {this.isCurrentUser() && <div className='pl2 black50 f20 fw3'>(you)</div>}
+            {this.props.seat.status === 'INVITED_TO_PROJECT' && <div className='pl2 black50 f20 fw3'>(invited)</div>}
           </div>
           {this.getRightPart()}
         </div>

@@ -1,47 +1,5 @@
 @import '~styles/variables';
 
-.tether {
-  margin-top: 20px;
-  background: #00A954;
-  color: #fff;
-  font-size: 16px;
-  line-height: 20px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0px 0px 25px -6px rgba(128,128,128,1);
-
-  &.left:before {
-    left: 0;
-    margin-left: 13px;
-  }
-
-  &.right:before {
-    right: 0;
-    margin-right: 13px;
-  }
-
-  &:before {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    content: ' ';
-    position: absolute;
-  }
-
-  &.bottom:before {
-    margin-top: 20px;
-    border-bottom: 10px solid #00A954;
-    top: -10px;
-  }
-
-  &.top:before {
-    margin-bottom: -20px;
-    border-top: 10px solid #00A954;
-    bottom: 10px;
-  }
-}
-
 .title {
   padding: 12px 16px;
   font-weight: 800;

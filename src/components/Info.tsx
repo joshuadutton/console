@@ -1,19 +1,31 @@
 import * as React from 'react'
+import * as cn from 'classnames'
+import {ReactNode} from 'react'
 
 interface Props {
   children?: JSX.Element
   slim?: boolean
   bright?: boolean
-  customTip?: JSX.Element
+  customTip?: ReactNode
   offsetX?: number
   width?: number | string
   cursorOffset?: number
   padding?: number
+  top?: boolean
+  offsetY?: number
+  isOpen?: boolean
 }
 
 const Info = (props: Props) => {
+  const offsetX = props.offsetX ? (props.offsetX + 'px') : '0px'
+  let offsetY = props.offsetY ? (props.offsetY + 'px') : '0px'
+
+  if (props.top) {
+    offsetY = `calc(-100% - 40px + ${offsetY})`
+  }
+
   let tooltipStyle = {
-    transform: `translateX(${props.offsetX ? (props.offsetX + 'px') : 0})`,
+    transform: `translate(${offsetX},${offsetY})`,
   }
   if (props.width) {
     tooltipStyle['width'] = props.width
@@ -24,11 +36,13 @@ const Info = (props: Props) => {
     tooltipContentStyle['padding'] = props.padding
   }
 
-  const cursorOffset = -props.offsetX + (props.cursorOffset ? props.cursorOffset : 0)
+  const cursorOffset = -(props.offsetX || 0) + (props.cursorOffset ? props.cursorOffset : 0)
+
+  const manual = typeof props.isOpen === 'boolean'
 
   return (
     <div
-      className='info'
+      className={cn('info', {manual, open: props.isOpen})}
     >
       <style jsx>{`
       .question-mark {
@@ -61,20 +75,28 @@ const Info = (props: Props) => {
         width: 8px;
         height: 8px;
       }
+      .tooltip.top .tooltip-content .before {
+        top: initial;
+        bottom: -4px;
+        left: 60px;
+      }
       .info {
         @p: .relative;
-        &:hover .tooltip {
-          @p: .db;
-        }
-        &:hover .question-mark {
-          @p: .bgBlue, .white;
-        }
-      }
-      span {
-        @p: .relative;
-        left: 1px;
       }
 
+      .info:not(.manual):hover .tooltip {
+        @p: .db;
+      }
+      .info:not(.manual):hover .question-mark {
+        @p: .bgBlue, .white;
+      }
+
+      .info.manual.open .tooltip {
+        @p: .db;
+      }
+      .info.manual.open .question-mark {
+        @p: .bgBlue, .white;
+      }
     `}</style>
       {props.customTip ? (
           props.customTip
@@ -84,7 +106,7 @@ const Info = (props: Props) => {
           </div>
         )}
       <div
-        className={'tooltip' + (Boolean(props.slim) ? ' slim' : '')}
+        className={cn('tooltip', {slim: props.slim, top: props.top})}
         style={tooltipStyle}
       >
         <div className='tooltip-content' style={tooltipContentStyle}>

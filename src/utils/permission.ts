@@ -6,8 +6,8 @@ export const icons = {
 }
 
 export const texts = {
-  READ: 'View Data',
-  CREATE: 'Create Node',
-  UPDATE: 'Edit Data',
-  DELETE: 'Delete Node',
+  READ: 'Read',
+  CREATE: 'Create',
+  UPDATE: 'Update',
+  DELETE: 'Delete',
 }

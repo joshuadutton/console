@@ -143,7 +143,7 @@ export default class CreditCardFront extends React.Component<Props, State> {
 
             .creditCardNumber {
               @p: .f20, .white;
-              font-family: 'OCR A Std';
+              /*font-family: 'OCR A Std';*/
             }
 
             .bottomNonEditing {
@@ -151,7 +151,7 @@ export default class CreditCardFront extends React.Component<Props, State> {
             }
 
             .creditCardFont {
-              font-family: 'OCR A Std';
+              /*font-family: 'OCR A Std';*/
             }
 
           `}</style>
@@ -181,7 +181,8 @@ export default class CreditCardFront extends React.Component<Props, State> {
             }
 
             .creditCardFont {
-              font-family: 'OCR A Std';
+              /* as long as we don't have it, lets use our standard font Open Sans */
+              /* font-family: 'OCR A Std'; */
             }
 
             .inputField {

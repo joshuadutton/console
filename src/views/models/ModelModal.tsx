@@ -1,6 +1,6 @@
 import * as React from 'react'
 import Modal from '../../components/Modal'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Model} from '../../types/types'
 import Icon from 'graphcool-styles/dist/components/Icon/Icon'
 import {$v} from 'graphcool-styles'
@@ -63,7 +63,7 @@ class EditModelModal extends React.Component<Props, {}> {
 export default Relay.createContainer(EditModelModal, {
   fragments: {
     model: () => Relay.QL`
-      
+
       fragment on Model {
         id
         name

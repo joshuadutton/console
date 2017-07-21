@@ -3,16 +3,22 @@ import * as React from 'react'
 const {PropTypes} = React
 import {Resizable} from 'react-resizable'
 import {Icon, $v} from 'graphcool-styles'
+import LeftResizable from './Resizable/LeftResizable'
+import * as cn from 'classnames'
 
 // An example use of Resizable.
 export default class ResizableBox extends React.Component<any,any> {
   static propTypes = {
-    height: PropTypes.number,
+    height: PropTypes.any,
     width: PropTypes.number,
+    hideArrow: PropTypes.bool,
+    left: PropTypes.bool,
   }
 
   static defaultProps = {
     handleSize: [20,20],
+    hideArrow: false,
+    left: false,
   }
 
   props: any
@@ -21,7 +27,7 @@ export default class ResizableBox extends React.Component<any,any> {
     height: this.props.height,
   }
 
-  onResize = (e: any, {element, size}: any) => {
+  onResize = (e: any, {element, size, ...rest}: any) => {
     const {width, height} = size
 
     if (this.props.onResize) {
@@ -47,16 +53,19 @@ export default class ResizableBox extends React.Component<any,any> {
     // Basic wrapper around a Resizable instance.
     // If you use Resizable directly, you are responsible for updating the child component
     // with a new width and height.
-    const {handleSize, onResize, onResizeStart, onResizeStop, draggableOpts,
-      minConstraints, maxConstraints, lockAspectRatio, axis, width, height, ...props} = this.props
+    const {handleSize, onResize, onResizeStart, onResizeStop, draggableOpts, left,
+      minConstraints, maxConstraints, lockAspectRatio, axis, width, height, hideArrow, ...props} = this.props
+
+    const ResizableComponent = left ? LeftResizable : Resizable
     return (
-      <div className='box'>
+      <div className={cn('box', {left})}>
         <style jsx>{`
           .box {
-            @p: .relative;
+            @p: .relative, .flexFixed;
           }
           .resizer {
-            @p: .br100, .bgDarkBlue, .absolute, .right0, .flex, .itemsCenter, .justifyCenter, .pointer, .z2, .o0;
+            @p: .br100, .bgDarkBlue, .absolute, .right0, .flex, .itemsCenter, .justifyCenter, .pointer, .o0;
+            z-index: 12;
             pointer-events: none;
             top: 50%;
             transform: translate(50%,-50%);
@@ -71,34 +80,47 @@ export default class ResizableBox extends React.Component<any,any> {
           .resizer:hover :global(svg) {
             stroke: $white;
           }
+          .box :global(.react-resizable-handle) {
+            @p: .absolute, .top0, .bottom0;
+            z-index: 11;
+            right: -10px;
+            width: 20px;
+            cursor: col-resize;
+          }
+          .box.left :global(.react-resizable-handle) {
+            left: -48px;
+            width: 20px;
+          }
         `}</style>
-        <Resizable
+        <ResizableComponent
           handleSize={handleSize}
           width={this.state.width}
           height={this.state.height}
           onResizeStart={onResizeStart}
           onResize={this.onResize}
           onResizeStop={onResizeStop}
-          draggableOpts={draggableOpts}
+          draggableOpts={{offsetParent: document.body, offsetParentRect: {left: 0, top: 0}}}
           minConstraints={minConstraints}
           maxConstraints={maxConstraints}
           lockAspectRatio={lockAspectRatio}
-          axis={axis}
+          axis={axis || 'x'}
         >
           <div style={{width: this.state.width + 'px', height: this.state.height + 'px'}} {...props} />
-        </Resizable>
-        <div className='resizer' onClick={this.toggle}>
-          <Icon
-            src={
-              this.state.width === 67 ?
-              require('graphcool-styles/icons/stroke/arrowRight.svg') :
-              require('graphcool-styles/icons/stroke/arrowLeft.svg')
-            }
-            color={$v.white60}
-            strokeWidth={4}
-            stroke
-          />
-        </div>
+        </ResizableComponent>
+        {!hideArrow && (
+          <div className='resizer' onClick={this.toggle}>
+            <Icon
+              src={
+                this.state.width === 67 ?
+                require('graphcool-styles/icons/stroke/arrowRight.svg') :
+                require('graphcool-styles/icons/stroke/arrowLeft.svg')
+              }
+              color={$v.white60}
+              strokeWidth={4}
+              stroke
+            />
+          </div>
+        )}
       </div>
     )
   }

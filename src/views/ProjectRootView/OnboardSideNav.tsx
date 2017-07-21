@@ -28,8 +28,8 @@ class OnboardSideNav extends React.Component<Props, {}> {
     const progress = 100 * this.props.gettingStartedState.progress.index / 5
 
     return (
-      <div className='flex flex-column'>
-        <div style={{ flex: '0 0 auto' }} className='relative'>
+      <div className='flex flex-column' style={{maxWidth: 300}}>
+        <div className='relative flexAuto'>
           <div
             className='absolute o-30 pointer'
             style={{ top: 25, right: 25 }}
@@ -73,12 +73,12 @@ class OnboardSideNav extends React.Component<Props, {}> {
               index: 5,
               text: 'Run example app',
             })}
-            {(this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART1') ||
-              this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2')) &&
-              <div className='bg-white br-2 dib f-16 mt-25 pv-10 ph-16 pointer' onClick={this.props.previousStep}>
-                Show task again
-              </div>
-            }
+            {/*{(this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART1') ||*/}
+              {/*this.props.gettingStartedState.isCurrentStep('STEP4_WAITING_PART2')) &&*/}
+              {/*<div className='bg-white br-2 dib f-16 mt-25 pv-10 ph-16 pointer' onClick={this.props.previousStep}>*/}
+                {/*Show task again*/}
+              {/*</div>*/}
+            {/*}*/}
             {!this.props.gettingStartedState.step.includes('STEP5') && (
               <div
                 className='bg-white br-2 dib f-16 mt-25 pv-10 ph-16 pointer'

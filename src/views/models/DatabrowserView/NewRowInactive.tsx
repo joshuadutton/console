@@ -105,7 +105,7 @@ class NewRowInactive extends React.Component<Props, State> {
             height: this.props.height,
           }}
           className={classes.loading}
-          to={`/${this.props.params.projectName}/models/${this.props.params.modelName}/schema/create`}
+          to={`/${this.props.params.projectName}/schema/${this.props.params.modelName}/create`}
         >
           <div></div>
         </Link>

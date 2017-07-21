@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {$p, variables, Icon, $g} from 'graphcool-styles'
 import * as cx from 'classnames'
 import {Operation, Field} from '../../../types/types'
@@ -64,7 +64,7 @@ class AffectedFields extends React.Component<Props, {}> {
         <div className={cx($p.pl38, $p.pr25)}>
           <div className={cx($p.flex, $p.flexRow, $p.itemsStart, $p.justifyBetween, $p.pb25)}>
             <div className='intro'>
-              Select the fields that should be affected by this permission.
+              Select the fields for which this permission should be applied.
             </div>
             <Info
               offsetX={100}
@@ -88,11 +88,11 @@ class AffectedFields extends React.Component<Props, {}> {
                       className={$p.mr4}
                     />
                   )}
-                  Apply to whole Model
+                  Apply to whole Type
                 </div>
               }
             >
-              "Apply to whole Model" means, that also fields that will be created in the future are affected by
+              "Apply to whole Type" means, that also fields that will be created in the future are affected by
               this permission.
             </Info>
           </div>
@@ -112,6 +112,7 @@ class AffectedFields extends React.Component<Props, {}> {
                   selected={fieldIds.includes(field.id) || applyToWholeModel}
                   onClick={() => toggleField && toggleField(field.id)}
                   className={cx($p.pointer, $p.mr10, $p.mb10)}
+                  editable
                 />
               ),
             )}

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import mapProps from '../../../../components/MapProps/MapProps'
 import {Model, ModelPermission} from '../../../../types/types'
 import {Icon, $p, variables} from 'graphcool-styles'
@@ -59,7 +59,11 @@ class ModelPermissionsHeader extends React.Component<Props, {}> {
           </div>
         </div>
         <div className={cx($p.flex, $p.flexRow, $p.itemsCenter)}>
-          <Link className={cx($p.ml25)} to={`/${params.projectName}/permissions/${model.name}/create`}>
+          <Link
+            className={cx($p.ml25)}
+            to={`/${params.projectName}/permissions/${model.name}/create`}
+            data-test={`new-permission-${model.name}`}
+          >
             <div
               className={cx(
                 $p.f14,

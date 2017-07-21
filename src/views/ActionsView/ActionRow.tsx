@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import Toggle from 'react-toggle-button'
 import { Action } from '../../types/types'
 import {Icon} from 'graphcool-styles'

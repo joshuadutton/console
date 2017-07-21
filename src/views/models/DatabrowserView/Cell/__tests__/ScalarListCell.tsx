@@ -34,6 +34,7 @@ test('ScalarListCell renders', () => {
         save, cancel, onKeyDown,
       }}
       field={field}
+      enums={[]}
     />,
   )
 

@@ -37,19 +37,19 @@ export const mockConstraints: Constraint[] = [
   },
 ]
 
-export const emptyField: Field = {
+export const emptyField = (nodeCount?: number): Field => ({
   id: '',
   name: '',
   description: '',
   typeIdentifier: undefined,
-  isRequired: false,
+  isRequired: nodeCount === 0,
   isList: false,
-  enumValues: [],
   defaultValue: undefined,
   migrationValue: undefined,
   isUnique: false,
+  enumId: '',
   constraints: mockConstraints, // TODO add real data when backend is ready
-}
+})
 
 export const mockField: Field = {
   id: '',
@@ -58,7 +58,6 @@ export const mockField: Field = {
   typeIdentifier: 'String',
   isRequired: true,
   isList: false,
-  enumValues: [],
   defaultValue: undefined,
   migrationValue: undefined,
   isUnique: false,

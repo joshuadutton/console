@@ -20,6 +20,7 @@ const modalStyle = {
     border: 'none',
     background: 'none',
     boxShadow: '0 1px 7px rgba(0,0,0,.2)',
+    overflow: 'visible',
   },
 }
 

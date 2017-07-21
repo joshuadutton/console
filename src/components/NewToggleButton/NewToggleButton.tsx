@@ -35,9 +35,9 @@ const Slider = styled.div`
 
 const ToggleInput = styled.input`
   &:checked + div {
-    background-color: ${variables.toggleGreen};
+    background-color: ${variables.green};
   }
-  
+
   &:checked + div:before {
     transform: translateX(19px);
   }

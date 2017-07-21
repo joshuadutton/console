@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {QueryEditor} from 'graphiql/dist/components/QueryEditor'
 import {SearchProviderAlgolia, Model} from '../../../types/types'
 import {withRouter} from 'react-router'
@@ -16,12 +16,14 @@ import {ShowNotificationCallback} from '../../../types/utils'
 import {connect} from 'react-redux'
 import ConfirmOperartionsPopup from './ConfirmOperationsPopup'
 import ConfirmOperationsPopup from './ConfirmOperationsPopup'
+import Loading from '../../../components/Loading/Loading'
 
 interface Props {
   algolia: SearchProviderAlgolia
   models: Model[]
   onRequestClose: Function
   showNotification: ShowNotificationCallback
+  noIndeces: boolean
 }
 
 interface State {
@@ -29,35 +31,42 @@ interface State {
   fragment: string
   fragmentValid: boolean
   title: string
+  loading: boolean
+  saving: boolean
 }
 
 class CreateAlgoliaIndex extends React.Component<Props, State> {
   constructor(props) {
     super(props)
 
-    this.state = {
-      selectedModel: this.props.models[0],
+    this.state = this.getInitialState(props)
+  }
+  getInitialState(props: Props): State {
+    return {
+      selectedModel: props.models[0],
       fragment: emptyAlgoliaFragment,
       fragmentValid: true,
       title: '',
+      loading: false,
+      saving: false,
     }
   }
   render() {
     const {algolia, models} = this.props
-    const {selectedModel, fragment, title} = this.state
+    const {selectedModel, fragment, title, loading} = this.state
     const valid = this.valid()
     return (
       <div className='create-algolia-index'>
         <style jsx>{`
           .create-algolia-index {
-            @inherit: .overflowAuto, .bgDarkBlue, .flex, .flexColumn, .justifyBetween, .w100, .overflowVisible;
+            @p: .overflowAuto, .bgDarkBlue, .flex, .flexColumn, .justifyBetween, .w100, .overflowVisible, .relative;
             height: 100vh;
           }
           .header {
             @p: .pa38, .f14, .white40, .ttu, .fw6;
           }
           .footer {
-            @p: .pa25, .flex, .itemsCenter, .justifyBetween;
+            @p: .pa25, .flex, .itemsCenter, .justifyBetween, .z2;
             margin-bottom: 80px;
           }
           .button {
@@ -70,8 +79,8 @@ class CreateAlgoliaIndex extends React.Component<Props, State> {
           .right {
             @p: .flex, .itemsCenter, .relative;
           }
-          .cancel {
-            @p: .white50, .f16;
+          .button.cancel {
+            @p: .f16, .white60;
           }
           .save {
             @p: .bgWhite10, .white30, .br2;
@@ -121,6 +130,9 @@ class CreateAlgoliaIndex extends React.Component<Props, State> {
             &::placeholder {
               @p: .white50;
             }
+          }
+          .loading {
+            @p: .flex, .top0, .right0, .bottom0, .left0, .z999, .itemsCenter, .justifyCenter;
           }
         `}</style>
         <style jsx global>{`
@@ -175,10 +187,10 @@ class CreateAlgoliaIndex extends React.Component<Props, State> {
             />
           </div>
           <div className='footer'>
-            <div className='button cancel'>Cancel</div>
+            <div className='button cancel' onClick={this.cancel}>Cancel</div>
             <div className='right'>
               <div className={'button save' + (valid ? ' active' : '')} onClick={this.create}>Create Index</div>
-              {valid && selectedModel.itemCount > 0 && (
+              {valid && selectedModel.itemCount > 0 && this.state.saving && (
                 <ConfirmOperationsPopup
                   numOperations={selectedModel.itemCount}
                   onCancel={this.close}
@@ -190,8 +202,25 @@ class CreateAlgoliaIndex extends React.Component<Props, State> {
             </div>
           </div>
         </div>
+        {loading && (
+          <div className='loading'>
+            <Loading color='white' />
+          </div>
+        )}
       </div>
     )
+  }
+
+  private cancel = () => {
+    if (this.props.noIndeces) {
+      this.reset()
+    } else {
+      this.close()
+    }
+  }
+
+  private reset = () => {
+    this.setState(this.getInitialState(this.props))
   }
 
   private handleModelChange = (e: any) => {
@@ -216,26 +245,33 @@ class CreateAlgoliaIndex extends React.Component<Props, State> {
   }
 
   private create = () => {
-    const {fragment, fragmentValid, title, selectedModel} = this.state
+    const {fragment, fragmentValid, title, selectedModel, loading} = this.state
     const {algolia} = this.props
 
-    if (this.valid()) {
-      Relay.Store.commitUpdate(
-        new AddAlgoliaSyncQueryMutation({
-          modelId: selectedModel.id,
-          indexName: title,
-          fragment,
-          searchProviderAlgoliaId: algolia.id,
-        }),
-        {
-          onSuccess: (res) => {
-            this.close()
+    if (this.valid() && !loading) {
+      if (!this.state.saving && selectedModel.itemCount > 0) {
+        return this.setState({saving: true} as State)
+      }
+      this.setState({loading: true} as State, () => {
+        Relay.Store.commitUpdate(
+          new AddAlgoliaSyncQueryMutation({
+            modelId: selectedModel.id,
+            indexName: title,
+            fragment,
+            searchProviderAlgoliaId: algolia.id,
+          }),
+          {
+            onSuccess: (res) => {
+              this.setState({loading: false} as State)
+              this.close()
+            },
+            onFailure: (res) => {
+              this.setState({loading: false} as State)
+              onFailureShowNotification(res, this.props.showNotification)
+            },
           },
-          onFailure: (res) => {
-            onFailureShowNotification(res, this.props.showNotification)
-          },
-        },
-      )
+        )
+      })
     }
 
   }

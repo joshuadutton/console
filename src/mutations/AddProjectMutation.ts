@@ -1,8 +1,10 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
+import {Region} from '../types/types'
 
 interface Props {
   projectName: string
   customerId: string
+  region: Region
 }
 
 export default class AddProjectMutation extends Relay.Mutation<Props, {}> {
@@ -36,6 +38,7 @@ export default class AddProjectMutation extends Relay.Mutation<Props, {}> {
   getVariables () {
     return {
       name: this.props.projectName,
+      region: this.props.region,
     }
   }
 }

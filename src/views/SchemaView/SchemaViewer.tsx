@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Voyager} from 'graphql-voyager'
 import fetch from 'isomorphic-fetch'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Viewer} from '../../types/types'
 import modalStyle from '../../utils/modalStyle'
 import {Icon} from 'graphcool-styles'

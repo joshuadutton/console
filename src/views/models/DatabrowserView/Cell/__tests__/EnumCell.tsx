@@ -32,6 +32,7 @@ test('EnumCell renders', () => {
       cancel={cancel}
       onKeyDown={onKeyDown}
       field={field}
+      enums={[]}
     />,
   )
 

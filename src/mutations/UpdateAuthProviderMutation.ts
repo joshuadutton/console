@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {AuthProviderDigits, AuthProviderAuth0} from '../types/types'
 
 interface Props {

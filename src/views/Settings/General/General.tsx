@@ -1,7 +1,7 @@
 import * as React from 'react'
 import {Viewer} from '../../../types/types'
 import ProjectInfo from './ProjectInfo'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import DangerZone from './DangerZone'
 
 interface Props {
@@ -42,7 +42,7 @@ export default Relay.createContainer(General, {
         ${DangerZone.getFragment('viewer')},
         project: projectByName(projectName: $projectName) {
           ${DangerZone.getFragment('project')},
-          ${ProjectInfo.getFragment('project')}  
+          ${ProjectInfo.getFragment('project')}
           name
         }
       }

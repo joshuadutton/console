@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Icon} from 'graphcool-styles'
 import {ShowNotificationCallback} from '../../types/utils'
 import {connect} from 'react-redux'

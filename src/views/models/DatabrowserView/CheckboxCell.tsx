@@ -7,6 +7,7 @@ interface Props {
   checked: boolean
   height: number
   disabled?: boolean
+  [key: string]: any
 }
 
 export default class CheckboxCell extends React.Component<Props, {}> {
@@ -16,13 +17,15 @@ export default class CheckboxCell extends React.Component<Props, {}> {
   }
 
   render () {
+    const {height, checked, onChange, ...rest} = this.props
     return (
       <div
         className={classes.root}
         style={{
-          height: this.props.height,
+          height,
         }}
         onClick={() => this._toggle()}
+        {...rest}
       >
         <div
           className={classes.border}
@@ -31,7 +34,7 @@ export default class CheckboxCell extends React.Component<Props, {}> {
           <div
             className={
               classnames(classes.dot, {
-                [classes.active]: this.props.checked,
+                [classes.active]: checked,
               })
             }
           >

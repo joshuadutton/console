@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {withRouter} from 'react-router'
 import Helmet from 'react-helmet'
 import mapProps from '../../components/MapProps/MapProps'

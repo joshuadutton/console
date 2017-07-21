@@ -14,7 +14,7 @@ export default class AddFieldCell extends React.Component<Props, {}> {
     return (
       <div className={classes.root}>
         <Link
-          to={`/${this.props.params.projectName}/models/${this.props.params.modelName}/schema/create`}
+          to={`/${this.props.params.projectName}/schema/${this.props.params.modelName}/create`}
           onClick={() => {
             tracker.track(ConsoleEvents.Databrowser.addFieldClicked())
           }}

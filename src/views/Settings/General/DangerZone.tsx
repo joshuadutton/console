@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {withRouter} from 'react-router'
 import ResetProjectDataMutation from '../../../mutations/ResetProjectDataMutation'
 import ResetProjectSchemaMutation from '../../../mutations/ResetProjectSchemaMutation'
@@ -114,9 +114,7 @@ class DangerZone extends React.Component<Props, State> {
             Reset Data
           </div>
         </div>
-        <div
-          className='actionRow bottomBorderForActionRow'
-        >
+        <div className='actionRow bottomBorderForActionRow'>
           <div>
             <div
               className={`fw3 f25 ${this.state.hoveredRowIndex === 1 ? 'solidOrange' : 'black50'}`}

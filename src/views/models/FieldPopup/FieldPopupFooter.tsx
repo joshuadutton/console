@@ -212,10 +212,16 @@ export default class FieldPopupFooter extends React.Component<Props, State> {
                 />
               ) : (
                 <Tether
-                  steps={[{
-                    step: 'STEP2_CLICK_CONFIRM_IMAGEURL',
-                    title: `That's it, click create!`,
-                  }]}
+                  steps={[
+                    {
+                      step: 'STEP2_CLICK_CONFIRM_IMAGEURL',
+                      title: `That's it, click create!`,
+                    },
+                    {
+                      step: 'STEP2_CLICK_CONFIRM_DESCRIPTION',
+                      title: `That's it, click create!`,
+                    },
+                  ]}
                   offsetX={5}
                   offsetY={5}
                   width={240}

@@ -12,7 +12,7 @@ const replace = debounce(
   (router: ReactRouter.InjectedRouter, to: string) => {
     router.replace(to)
   },
-  2000,
+  30000,
   {
     leading: true,
   },

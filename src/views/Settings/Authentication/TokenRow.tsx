@@ -108,13 +108,13 @@ export default class TokenRow extends React.Component<Props, State> {
             </div>
             }
             {this.state.isHovered &&
-            <Icon
-              className='ml10 buttonShadow'
-              color='rgba(0,0,0,.5)'
-              src={require('../../../assets/icons/copy.svg')}
-              width={34}
-              height={34}
-            />
+              <Icon
+                className='ml10 buttonShadow'
+                color='rgba(0,0,0,.5)'
+                src={require('../../../assets/icons/copy.svg')}
+                width={34}
+                height={34}
+              />
             }
           </div>
         </CopyToClipboard>

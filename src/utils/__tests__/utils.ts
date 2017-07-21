@@ -28,7 +28,7 @@ describe('isValidUrl', () => {
     expect(isValidUrl(url)).toBe(false)
   })
 
-  it('checks if an two space-seperated words is an invalid url', () => {
+  it('checks if an two space-separated words is an invalid url', () => {
     const url: string = 'aoethu aoeuhnatso'
     expect(isValidUrl(url)).toBe(false)
   })

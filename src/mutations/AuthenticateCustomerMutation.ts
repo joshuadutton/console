@@ -1,11 +1,11 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import { User } from '../types/types'
 
 interface Props {
   auth0IdToken: string
 }
 
-interface Response {
+export interface Response {
   token: string
   user: User
 }

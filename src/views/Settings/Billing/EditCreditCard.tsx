@@ -159,7 +159,7 @@ export default class EditCreditCard extends React.Component<Props, State> {
             <div className='title'>State</div>
             <input
               className='narrowInput inputField'
-              placeholder='Enter state'
+              placeholder='Enter state (optional)'
               value={this.props.state}
               onChange={(e: any) => this.props.onAddressDataChange('state', e.target.value)}
               onKeyDown={this.handleKeyDown}

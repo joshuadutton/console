@@ -6,19 +6,21 @@ import * as cn from 'classnames'
 interface Props {
   link: string
   active?: boolean
-  iconSrc: string
+  iconSrc?: string
   text: string
   size?: number
   minimalHighlight?: boolean
   onClick?: () => void
   small?: boolean
+  customIcon?: any
+  [key: string]: any
 }
 
 export default class SideNavElement extends React.Component<Props, null> {
   render() {
-    const {link, active, iconSrc, text, size, minimalHighlight, onClick, small} = this.props
+    const {link, active, iconSrc, text, size, minimalHighlight, onClick, small, customIcon, ...rest} = this.props
     return (
-      <Link to={link} onClick={onClick} title={text}>
+      <Link to={link} onClick={onClick} title={text} {...rest}>
         <div
           className={cn(
             'side-nav-element', {
@@ -60,14 +62,18 @@ export default class SideNavElement extends React.Component<Props, null> {
              transform: translateX(50px);
            }
           `}</style>
-          <div className='icon'>
-            <Icon
-              src={iconSrc}
-              color={$v.white}
-              height={size || 20}
-              width={size || 20}
-            />
-          </div>
+          {customIcon ? (
+            customIcon
+          ) : (
+            <div className='icon'>
+              <Icon
+                src={iconSrc}
+                color={$v.white}
+                height={size || 20}
+                width={size || 20}
+              />
+            </div>
+          )}
           <div className={cn('text', {small})}>
             {text}
           </div>

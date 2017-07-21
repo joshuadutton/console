@@ -1,5 +1,5 @@
 
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 
 interface Props {
   projectId: string

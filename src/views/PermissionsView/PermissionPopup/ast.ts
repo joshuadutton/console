@@ -1,4 +1,5 @@
 import {parse, visit} from 'graphql'
+import {validate} from 'graphql/validation'
 
 import {PermissionVariable, PermissionQueryArgument} from '../../../types/types'
 export function putVariablesToQuery(query: string, variables: PermissionQueryArgument[]) {
@@ -6,15 +7,16 @@ export function putVariablesToQuery(query: string, variables: PermissionQueryArg
 
   try {
     let ast = parse(query)
-    let nameEnd = -1
+    // let nameEnd = -1
     let selectionStart = -1
 
     visit(ast, {
-      Name(node) {
-        if (nameEnd === -1) {
-          nameEnd = node.loc.end
-        }
-      },
+      // Name(node) {
+      //   if (nameEnd === -1) {
+      //     nameEnd = node.loc.end
+      //     debugger
+      //   }
+      // },
       SelectionSet(node) {
         if (selectionStart === -1) {
           selectionStart = node.loc.start
@@ -22,7 +24,8 @@ export function putVariablesToQuery(query: string, variables: PermissionQueryArg
       },
     })
 
-    newQuery = query.slice(0, nameEnd) + renderVariables(variables) + query.slice(selectionStart, query.length)
+    // newQuery = query.slice(0, nameEnd) + renderVariables(variables) + query.slice(selectionStart, query.length)
+    newQuery = 'query ' + renderVariables(variables) + query.slice(selectionStart, query.length)
   } catch (e) {
     //
   }
@@ -56,7 +59,7 @@ export function extractSelection(query: string) {
   return newQuery
 }
 
-export function addVarsAndName(modelNamePlural: string, query: string, vars: PermissionQueryArgument[]) {
+export function addVarsAndName(modelNamePlural: string, query: string, vars: PermissionQueryArgument[], schema: any) {
   let newQuery = query
 
   try {
@@ -74,12 +77,12 @@ export function addVarsAndName(modelNamePlural: string, query: string, vars: Per
       },
     })
 
-    const {variables} = getVariableNamesFromQuery(query)
+    const {variables} = getVariableNamesFromQuery(query, false, schema)
     const mappedVariables = variables.map(variable => vars.find(arg => arg.name === variable))
 
     const printedVariables = renderVariables(mappedVariables)
 
-    newQuery = `query permit${modelNamePlural}` + printedVariables + query.slice(selectionStart, query.length)
+    newQuery = `query ` + printedVariables + query.slice(selectionStart, query.length)
   } catch (e) {
     //
   }
@@ -90,6 +93,7 @@ export function addVarsAndName(modelNamePlural: string, query: string, vars: Per
 export function getVariableNamesFromQuery(
   query: string,
   definitionOnly: boolean = false,
+  schema: any,
 ): {variables: string[], valid: boolean} {
   let variables = new Set()
   let valid = true
@@ -114,6 +118,11 @@ export function getVariableNamesFromQuery(
     }
 
     visit(ast, config)
+
+    const validation = validate(schema, ast)
+    if (validation.length > 0) {
+      valid = false
+    }
   } catch (e) {
     valid = false
   }

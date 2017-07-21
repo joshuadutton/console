@@ -1,7 +1,8 @@
 import * as React from 'react'
 import {Viewer} from '../../../types/types'
 import Tokens from './Tokens'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
+import * as cookiestore from 'cookiestore' import Copy from '../../../components/Copy'
 
 interface Props {
   viewer: Viewer
@@ -10,6 +11,8 @@ interface Props {
 class Authentication extends React.Component<Props, {}> {
 
   render() {
+    const command = `graphcool auth --token "${cookiestore.get('graphcool_auth_token')}"`
+
     return (
       <div className='authentication-container'>
         <style jsx>{`
@@ -32,8 +35,23 @@ class Authentication extends React.Component<Props, {}> {
             }
           }
 
+          pre {
+            @p: .purple, .code, .br2, .bgDarkBlue04, .dib, .f14, .w100, .overflowAuto, .mt10;
+            padding: 2px 4px;
+          }
         `}</style>
         <div>
+          <div className='headerContent'>
+            <div className='headerTitle'>Auth via CLI</div>
+            <div className='headerDescription'>
+              To authenticate with the graphcool cli without a browser, use the following command
+              <Copy text={command}>
+                <pre>
+                  {command}
+                </pre>
+              </Copy>
+            </div>
+          </div>
           <div className='headerContent'>
             <div className='headerTitle'>Permanent Auth Tokens</div>
             <div className='headerDescription'>

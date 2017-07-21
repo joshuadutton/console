@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import * as Immutable from 'immutable'
 import FloatingInput from '../../../components/FloatingInput/FloatingInput'
 import UpdateAuthProviderMutation from '../../../mutations/UpdateAuthProviderMutation'
@@ -7,17 +7,23 @@ import {connect} from 'react-redux'
 import {onFailureShowNotification} from '../../../utils/relay'
 import {showNotification} from '../../../actions/notification'
 import {bindActionCreators} from 'redux'
-import {Project, AuthProvider, AuthProviderType} from '../../../types/types'
+import {Project, AuthProvider, AuthProviderType, Model, PackageDefinition} from '../../../types/types'
 import {ShowNotificationCallback} from '../../../types/utils'
 import * as cx from 'classnames'
 import {$p} from 'graphcool-styles'
 import tracker from '../../../utils/metrics'
 import {ConsoleEvents} from 'graphcool-metrics'
+import InstallPackage from '../../../mutations/Packages/InstallPackage'
+import getAnonymousPackage from './auth'
+import mapProps from '../../../components/MapProps/MapProps'
+import UninstallPackage from '../../../mutations/Packages/UninstallPackage'
+
 interface Props {
   selectedType: AuthProviderType
   project: Project
   showNotification: ShowNotificationCallback
   forceFetchRoot: () => void
+  anonymousPackage: PackageDefinition
 }
 
 interface AuthProviderErrors {
@@ -36,6 +42,7 @@ interface State {
   authProvider: AuthProvider
   errors: AuthProviderErrors
   hasChanged: boolean
+  selectedAnonymousModel: string
 }
 
 class AuthProviderSidePanel extends React.Component<Props, State> {
@@ -43,11 +50,16 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props)
 
+    const firstModel = props.project.models.edges[0].node
+
     this.state = {
       authProvider: this.getAuthProvider(props),
       hasChanged: false,
       errors: this.initErrors(),
+      selectedAnonymousModel: props.anonymousPackage ?
+        this.getSelectedType(props.anonymousPackage.definition) : firstModel.name,
     }
+    global['a'] = this
   }
 
   componentWillReceiveProps(props: Props) {
@@ -66,12 +78,12 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
         <div className='flex flex-column'>
           <div className='w-100 white pa-25 fw1 bg-black-80 relative'>
             {authProvider.isEnabled &&
-            <div
-              className='absolute pa-6 bg-accent white ttu br-1 fw5'
-              style={{ top: 16, right: 16, background: '#7ED321', fontSize: 14 }}
-            >
-              Active
-            </div>
+              <div
+                className='absolute pa-6 bg-accent white ttu br-1 fw5'
+                style={{ top: 16, right: 16, background: '#7ED321', fontSize: 14 }}
+              >
+                Active
+              </div>
             }
             <div className='f-25 b'>
               {text.title}
@@ -119,62 +131,106 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
             </div>
           </div>
           }
+          {authProvider.type === 'anonymous-auth-provider' &&
+            <div className='flex w-100 bg-black-70 justify-between white pa-25'>
+              <div className='w-30 pr2 flex flex-column'>
+                <div className='b mb-16 white-50'>
+                  Generated Fields
+                </div>
+                <div>
+                    <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
+                      secret
+                    </span>
+                </div>
+              </div>
+              <div className='w-70 flex flex-column'>
+                <div className='b mb-16 white-50'>
+                  Generated Mutations
+                </div>
+                <div>
+                  <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
+                    {`authenticateAnonymous${this.state.selectedAnonymousModel}(secret: String!)`}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+          {authProvider.type === 'anonymous-auth-provider' && (
+            <div className='pa-25 flex flex-column fw1'>
+              <style jsx={true}>{`
+                .btn {
+                  @p: .ph16, .pv10, .br2, .bgGreen, .white, .f16, .pointer, .dib;
+                }
+              `}</style>
+              <span>Select the Type the Secret should be added to</span>
+            <div className='flex items-center mt-25 justify-between'>
+                <select onChange={this.handleAnonymousTypeChange} value={this.state.selectedAnonymousModel}>
+                  {this.props.project.models.edges.map(edge => (
+                    <option value={edge.node.name}>{edge.node.name}</option>
+                  ))}
+                </select>
+                {authProvider.isEnabled && (
+                  <div className='btn' onClick={this.updateAnonymousAuthProvider}>Update Type</div>
+                )}
+              </div>
+            </div>
+          )}
           {authProvider.type === 'AUTH_PROVIDER_DIGITS' &&
-          <div className='flex w-100 bg-black-70 justify-between white pa-25'>
-            <div className='w-30 pr2 flex flex-column'>
-              <div className='b mb-16 white-50'>
-                Generated Fields
+            <div className='flex w-100 bg-black-70 justify-between white pa-25'>
+              <div className='w-30 pr2 flex flex-column'>
+                <div className='b mb-16 white-50'>
+                  Generated Fields
+                </div>
+                <div>
+                  <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
+                    digitsId
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
-                  digitsId
-                </span>
+              <div className='w-70 flex flex-column'>
+                <div className='b mb-16 white-50'>
+                  Generated Mutations
+                </div>
+                <div>
+                  <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
+                    {`createUser(authProvider: { digits: { apiUrl, credentials } })`}
+                  </span>
+                </div>
+                <div>
+                  <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
+                    {`signinUser(digits: { apiUrl, credentials })`}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className='w-70 flex flex-column'>
-              <div className='b mb-16 white-50'>
-                Generated Mutations
-              </div>
-              <div>
-                <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
-                  {`createUser(authProvider: { digits: { apiUrl, credentials } })`}
-                </span>
-              </div>
-              <div>
-                <span className='pa-6 mb-10 br-2 dib bg-white-10' style={{ fontSize: 13 }}>
-                  {`signinUser(digits: { apiUrl, credentials })`}
-                </span>
-              </div>
-            </div>
-          </div>
           }
           {authProvider.type === 'AUTH_PROVIDER_DIGITS' &&
-          <div className='pa-25 flex flex-column fw1'>
-            <FloatingInput
-              labelClassName='f-25 pa-16 black-50'
-              className='pa-16 bg-black-05 br-2 bn mb-10 f-25'
-              label='Consumer Key'
-              placeholder='xxxxxxxxxxxxx'
-              value={authProvider.digits!.consumerKey}
-              onChange={(e: any) => this.setIn(['digits', 'consumerKey'], e.target.value)}
-              onKeyDown={e => e.keyCode === 13 && this.enable()}
-            />
-            {errors.digits.consumerKey &&
-            <div className={cx($p.f12, $p.orange)}>The Consumer Key is required</div>
-            }
-            <FloatingInput
-              labelClassName='f-25 pa-16 black-50'
-              className='pa-16 bg-black-05 br-2 bn f-25'
-              label='Consumer Secret'
-              placeholder='xxxxxxxxxxxxx'
-              value={authProvider.digits!.consumerSecret}
-              onChange={(e: any) => this.setIn(['digits', 'consumerSecret'], e.target.value)}
-              onKeyDown={e => e.keyCode === 13 && this.enable()}
-            />
-            {errors.digits.consumerSecret &&
-            <div className={cx($p.f12, $p.orange)}>The Consumer Secret is required</div>
-            }
-          </div>
+            <div className='pa-25 flex flex-column fw1'>
+              <FloatingInput
+                labelClassName='f-25 pa-16 black-50'
+                className='pa-16 bg-black-05 br-2 bn mb-10 f-25'
+                label='Consumer Key'
+                placeholder='xxxxxxxxxxxxx'
+                value={authProvider.digits!.consumerKey}
+                onChange={(e: any) => this.setIn(['digits', 'consumerKey'], e.target.value)}
+                onKeyDown={e => e.keyCode === 13 && this.enable()}
+              />
+              {errors.digits.consumerKey &&
+                <div className={cx($p.f12, $p.orange)}>The Consumer Key is required</div>
+              }
+              <FloatingInput
+                labelClassName='f-25 pa-16 black-50'
+                className='pa-16 bg-black-05 br-2 bn f-25'
+                label='Consumer Secret'
+                placeholder='xxxxxxxxxxxxx'
+                value={authProvider.digits!.consumerSecret}
+                onChange={(e: any) => this.setIn(['digits', 'consumerSecret'], e.target.value)}
+                onKeyDown={e => e.keyCode === 13 && this.enable()}
+              />
+              {errors.digits.consumerSecret &&
+                <div className={cx($p.f12, $p.orange)}>The Consumer Secret is required</div>
+              }
+            </div>
           }
           {authProvider.type === 'AUTH_PROVIDER_AUTH0' &&
           <div className='flex w-100 bg-black-70 justify-between white pa-25'>
@@ -268,6 +324,10 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
     )
   }
 
+  private handleAnonymousTypeChange = e => {
+    this.setState({selectedAnonymousModel: e.target.value} as State)
+  }
+
   private initErrors = () => {
     return {
       auth0: {
@@ -327,7 +387,30 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
   }
 
   private getAuthProvider(props: Props): AuthProvider {
+    if (props.selectedType === 'anonymous-auth-provider') {
+      return {
+        id: 'anonymous-auth-provider',
+        type: 'anonymous-auth-provider',
+        isEnabled: Boolean(this.props.anonymousPackage),
+        digits: null,
+        auth0: null,
+      }
+    }
     return props.project.authProviders.edges.map(e => e.node).find(a => a.type === props.selectedType)!
+  }
+
+  private getSelectedType(definition) {
+    const line = definition.split('\n').find(line => line.includes('onType:'))
+    if (line) {
+      const regex = /.+?:\s{0,1}(.+)/
+      const result = regex.exec(line)
+      if (result) {
+        return result[1]
+      } else {
+        return null
+      }
+    }
+    return null
   }
 
   private enable = () => {
@@ -360,6 +443,9 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
 
   private update = () => {
     const {authProvider} = this.state
+    if (authProvider.type === 'anonymous-auth-provider') {
+      return this.updateAnonymousAuthProvider()
+    }
     Relay.Store.commitUpdate(
       new UpdateAuthProviderMutation({
         authProviderId: authProvider.id,
@@ -380,17 +466,108 @@ class AuthProviderSidePanel extends React.Component<Props, State> {
       },
     )
   }
+
+  private uninstallAnonymousAuthProvider() {
+    return new Promise((resolve, reject) => {
+      Relay.Store.commitUpdate(
+        new UninstallPackage({
+          projectId: this.props.project.id,
+          name: 'anonymous-auth-provider',
+        }),
+        {
+          onSuccess: (res) => {
+            // The force fetching because authproviders are too complicated to selective choose the config
+            // forceFetchRoot gets passed down from StuctureView/DatabrowserView
+            // which is needed to reflect all affected data
+            console.log('Uninstalled Package', res)
+            // this.props.forceFetchRoot()
+            resolve(res)
+          },
+          onFailure: (transaction) => {
+            reject(transaction)
+            onFailureShowNotification(transaction, this.props.showNotification)
+          },
+        },
+      )
+    })
+  }
+
+  private updateAnonymousAuthProvider = () => {
+    const {authProvider, selectedAnonymousModel} = this.state
+    const {isEnabled} = authProvider
+
+    const hack = () => {
+      if (isEnabled) {
+        const definition = getAnonymousPackage(this.state.selectedAnonymousModel)
+
+        Relay.Store.commitUpdate(
+          new InstallPackage({
+            projectId: this.props.project.id,
+            definition,
+          }),
+          {
+            onSuccess: (res) => {
+              // The force fetching because authproviders are too complicated to selective choose the config
+              // forceFetchRoot gets passed down from StuctureView/DatabrowserView
+              // which is needed to reflect all affected data
+              console.log('Installed Package', res)
+              this.props.forceFetchRoot()
+            },
+            onFailure: (transaction) => {
+              onFailureShowNotification(transaction, this.props.showNotification)
+            },
+          },
+        )
+      } else {
+        this.uninstallAnonymousAuthProvider()
+          .then(() => {
+            this.props.forceFetchRoot()
+          })
+      }
+    }
+    if (this.props.anonymousPackage) {
+      this.uninstallAnonymousAuthProvider()
+        .then(hack)
+    } else {
+      hack()
+    }
+  }
 }
+
+const MappedAuthProviderSidePanel = mapProps({
+  anonymousPackage: props => {
+    return props.project.packageDefinitions.edges
+      .map(edge => edge.node)
+      .find(node => node.name === 'anonymous-auth-provider')
+  },
+})(AuthProviderSidePanel)
 
 const mapDispatchToProps = (dispatch) => {
   return bindActionCreators({showNotification}, dispatch)
 }
 
-export default Relay.createContainer(connect(null, mapDispatchToProps)(AuthProviderSidePanel), {
+export default Relay.createContainer(connect(null, mapDispatchToProps)(MappedAuthProviderSidePanel), {
     fragments: {
         project: () => Relay.QL`
           fragment on Project {
             id
+            models(first: 100) {
+              edges {
+                node {
+                  id
+                  name
+                }
+              }
+            }
+            packageDefinitions(first: 100) {
+              edges {
+                node {
+                  id
+                  definition
+                  name
+                }
+              }
+            }
             authProviders(first: 100) {
               edges {
                 node {
@@ -446,6 +623,14 @@ const texts: {[key: string]: AuthText} = {
     link: {
       href: 'https://www.auth0.com',
       content: 'www.auth0.com',
+    },
+  },
+  'anonymous-auth-provider': {
+    title: 'Graphcool Anonymous Auth',
+    description: 'The anonymous auth provider can be used if you need temporary sessions.',
+    link: {
+      href: 'https://graph.cool/docs/reference/platform/authentication-wejileech9',
+      content: 'graph.cool/docs',
     },
   },
 }

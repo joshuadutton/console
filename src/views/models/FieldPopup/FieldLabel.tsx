@@ -73,14 +73,21 @@ export default class FieldLabel extends React.Component<Props, State> {
         `}</style>
             <div className='flex itemsCenter pr38 edit-name'>
               <Tether
-                steps={[{
-                  step: 'STEP2_ENTER_FIELD_NAME_IMAGEURL',
-                  title: 'Call the field "imageUrl"',
-                  description: 'Field names always start lower case.',
-                }]}
+                steps={[
+                  {
+                    step: 'STEP2_ENTER_FIELD_NAME_IMAGEURL',
+                    title: 'Call the field "imageUrl"',
+                    description: 'Field names always start lower case.',
+                  },
+                  {
+                    step: 'STEP2_ENTER_FIELD_NAME_DESCRIPTION',
+                    title: 'Call the field "description"',
+                    description: 'Field names always start lower case.',
+                  },
+                ]}
                 offsetX={5}
                 offsetY={5}
-                width={240}
+                width={270}
               >
                 <input
                   className={'enter-event fieldNameInputField' + ((errors.invalidName && showErrors) ? ' error' : '')}

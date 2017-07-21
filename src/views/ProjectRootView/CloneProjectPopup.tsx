@@ -1,5 +1,5 @@
 import * as React            from 'react'
-import * as Relay            from 'react-relay'
+import * as Relay            from 'react-relay/classic'
 import {connect}             from 'react-redux'
 import {ConsoleEvents}       from 'graphcool-metrics'
 import * as cx               from 'classnames'

@@ -19,6 +19,7 @@ interface Props {
   id: string
   title: string
   videoId?: string
+  boring?: boolean
 }
 
 interface State {
@@ -46,9 +47,10 @@ export default class ModalDocs extends React.Component<Props, State> {
 
   render() {
     const active = this.state.firstTime || this.state.open
+    const {boring} = this.props
 
     return (
-      <div className='modal-docs'>
+      <div className={cx('modal-docs', {boring, active})}>
         <style jsx>{`
           .modal-docs {
             @p: .relative;
@@ -76,6 +78,18 @@ export default class ModalDocs extends React.Component<Props, State> {
             right: -38px;
             transform: translateX(100%);
           }
+          .modal-docs.boring .docs {
+            @p: .top0, .right0;
+            transform: translateX(0);
+          }
+          .modal-docs.boring .docs.active {
+            @p: .buttonShadow, .bgWhite, .pa10, .br2;
+            top: -15px;
+            right: -10px;
+          }
+          .modal-docs.boring .header {
+            flex-direction: row-reverse;
+          }
           .content {
             @p: .mt25, .ml6;
           }
@@ -98,7 +112,7 @@ export default class ModalDocs extends React.Component<Props, State> {
           }
         `}</style>
         {this.props.children}
-        <div className='docs'>
+        <div className={cx('docs', {active})}>
           <div className='header'>
             <div className={cx('icon', {active})} onClick={this.toggle}>
               <span>?</span>

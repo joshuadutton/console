@@ -1,10 +1,9 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 
 interface Props {
   modelId: string
   name: string
   typeIdentifier: string
-  enumValues: string[]
   isRequired: boolean
   isUnique: boolean
   isList: boolean
@@ -12,6 +11,7 @@ interface Props {
   relationId?: string
   migrationValue?: string
   description: string
+  enumId?: string
 }
 
 export default class AddFieldMutation extends Relay.Mutation<Props, {}> {
@@ -47,7 +47,6 @@ export default class AddFieldMutation extends Relay.Mutation<Props, {}> {
       modelId: this.props.modelId,
       name: this.props.name,
       typeIdentifier: this.props.typeIdentifier,
-      enumValues: this.props.enumValues,
       isRequired: this.props.isRequired,
       isList: this.props.isList,
       isUnique: this.props.isUnique,
@@ -55,6 +54,7 @@ export default class AddFieldMutation extends Relay.Mutation<Props, {}> {
       relationId: this.props.relationId,
       migrationValue: this.props.migrationValue,
       description: this.props.description || null,
+      enumId: this.props.enumId || null,
     }
   }
 }

@@ -35,8 +35,8 @@ export default class Alert extends React.Component<null, State> {
     global['graphcoolConfirm'] = this.showConfirm
   }
 
-  showAlert = (text: string) => {
-    this.setState({isOpen: true, text} as State)
+  showAlert = (text: string, title?: string) => {
+    this.setState({isOpen: true, text, title: title || ''} as State)
   }
 
   showConfirm = (text: string, title?: string) => {

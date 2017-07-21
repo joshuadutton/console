@@ -1,12 +1,16 @@
 import * as React from 'react'
+import {Field} from '../../../../../types/types'
 
 interface Props {
   onSetNull: () => void
   onSave: () => void
   onCancel: () => void
+  field: Field
+  changed: boolean
+  values: string[] | null
 }
 
-const SelectNodesCellFooter = ({onSetNull, onSave, onCancel}: Props) => (
+const SelectNodesCellFooter = ({onSetNull, onSave, onCancel, field, changed, values}: Props) => (
   <div className='select-nodes-cell-footer'>
     <style jsx>{`
       .select-nodes-cell-footer {
@@ -34,10 +38,16 @@ const SelectNodesCellFooter = ({onSetNull, onSave, onCancel}: Props) => (
         @p: .red;
       }
     `}</style>
-    <div className='button null' onClick={onSetNull}>Set null</div>
+    <div>
+      {values && values.length > 0 && (
+        <div className='button cancel' onClick={onSetNull}>Unselect {field.isList ? ' all' : ' node'}</div>
+      )}
+    </div>
     <div className='flexy'>
-      <div className='button cancel' onClick={onCancel}>Cancel</div>
-      <div className='button save' onClick={onSave}>Save</div>
+      <div className='button cancel' onClick={onCancel}>{changed ? 'Cancel' : 'Close'}</div>
+      {changed && (
+        <div className='button save' onClick={onSave}>Save</div>
+      )}
     </div>
   </div>
 )

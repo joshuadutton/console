@@ -3,6 +3,9 @@ import {Model} from '../../types/types'
 import {Combobox} from 'react-input-enhancements'
 import FieldNameInput from './FieldNameInput'
 import BreakingChangeIndicator from './BreakingChangeIndicator'
+import {$v} from 'graphcool-styles'
+import FieldHorizontalSelect from '../models/FieldPopup/FieldHorizontalSelect'
+import Info from '../../components/Info'
 
 interface Props {
   relatedFieldName: string | null
@@ -15,6 +18,9 @@ interface Props {
   inputIsBreakingChange: boolean
   modelIsBreakingChange: boolean
   forbiddenFieldNames: string[]
+  isRequired: boolean
+  didChangeIsRequired: (isRequired: boolean) => void
+  singleCardinality: boolean
   // messagesForBreakingChange: string[]
 }
 
@@ -49,6 +55,12 @@ export default class ModelSelectionBox extends React.Component<Props, State> {
     return (
       <div className={`model-selection-box ${this.props.many && 'topMargin20'}`}>
         <style jsx={true}>{`
+          .model-selection-box :global(.required-relation-chooser) {
+            @p: .dn;
+          }
+          .model-selection-box:hover :global(.required-relation-chooser) {
+            @p: .flex;
+          }
           .bottomBorder {
             border-bottom-style: solid;
             border-bottom-width: 1px;
@@ -115,6 +127,18 @@ export default class ModelSelectionBox extends React.Component<Props, State> {
               didChangeFieldName={this.props.didChangeFieldName}
               forbiddenFieldNames={this.props.forbiddenFieldNames}
             />
+            {this.props.singleCardinality && (
+              <FieldHorizontalSelect
+                activeBackgroundColor={$v.blue}
+                inactiveBackgroundColor='#F5F5F5'
+                choices={['required', 'optional']}
+                selectedIndex={this.props.isRequired ? 0 : 1}
+                inactiveTextColor={$v.gray30}
+                onChange={(index) => this.props.didChangeIsRequired([true, false][index])}
+                small
+                className='required-relation-chooser'
+              />
+            )}
           </BreakingChangeIndicator>
         </div>
         {this.props.many &&

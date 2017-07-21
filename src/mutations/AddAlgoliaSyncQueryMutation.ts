@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {pick} from 'lodash'
 
 interface Props {
@@ -20,7 +20,7 @@ export default class AddAlgoliaSyncQueryMutation extends Relay.Mutation<Props, R
     return Relay.QL`
       fragment on AddAlgoliaSyncQueryPayload {
         searchProviderAlgolia
-        algoliaSyncQueryEdge     
+        algoliaSyncQueryEdge
         algoliaSyncQueryConnection
       }
     `

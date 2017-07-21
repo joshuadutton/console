@@ -4,7 +4,7 @@ import PopupWrapper from '../../../components/PopupWrapper/PopupWrapper'
 import {withRouter} from 'react-router'
 import {Icon} from 'graphcool-styles'
 import CreditCardInputSection from './CreditCardInputSection'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import Loading from '../../../components/Loading/Loading'
 
 interface State {

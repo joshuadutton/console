@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {withRouter} from 'react-router'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import * as cookiestore from 'cookiestore'
 import {default as mapProps} from 'map-props'
 import AddProjectMutation from '../../mutations/AddProjectMutation'
@@ -13,6 +13,7 @@ interface Props {
   viewer: Viewer,
   projectName: string,
   router: ReactRouter.InjectedRouter
+  location: any
 }
 
 class RootRedirectView extends React.Component<Props, {}> {
@@ -23,13 +24,14 @@ class RootRedirectView extends React.Component<Props, {}> {
 
   componentWillMount(): void {
     if (this.props.projectName) {
-      this.props.router.replace(`/${this.props.projectName}`)
+      this.props.router.replace(`/${this.props.projectName}${this.props.location.search}`)
     }
   }
 
   shouldComponentUpdate(nextProps: Props): boolean {
     if (nextProps.projectName) {
-      this.props.router.replace(`/${nextProps.projectName}`)
+      const url = `/${nextProps.projectName}${this.props.location.search}`
+      this.props.router.replace(url)
       return false
     }
 
@@ -58,11 +60,12 @@ class RootRedirectView extends React.Component<Props, {}> {
           {
             projectName,
             customerId: this.props.viewer.user.id,
+            region: 'US_WEST_2',
           }),
         {
           onSuccess: () => {
             tracker.track(ConsoleEvents.Project.created({name: projectName}))
-            this.props.router.replace(`/${projectName}`)
+            this.props.router.replace(`/${projectName}${this.props.location.search}`)
           },
         })
     }

@@ -3,7 +3,7 @@ import * as Modal from 'react-modal'
 import {fieldModalStyle} from '../../../utils/modalStyle'
 import FieldPopupHeader from './FieldPopupHeader'
 import FieldPopupFooter from './FieldPopupFooter'
-import {Field, FieldType, Constraint, ConstraintType} from '../../../types/types'
+import {Field, FieldType, Constraint, ConstraintType, Enum} from '../../../types/types'
 import {ConsoleEvents, MutationType, FieldPopupSource} from 'graphcool-metrics'
 import BaseSettings from './BaseSettings'
 import AdvancedSettings from './AdvancedSettings'
@@ -11,7 +11,7 @@ import Constraints from './Constraints'
 import {emptyField, mockConstraints} from './constants'
 import mapProps from 'map-props'
 import {connect} from 'react-redux'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {withRouter} from 'react-router'
 import {
   toggleIsList,
@@ -26,9 +26,8 @@ import {
   editConstraint,
   getMigrationUI,
   isValid,
-  updateEnumValues,
   didChange,
-  isBreaking, updateMigrationValue,
+  isBreaking, updateMigrationValue, updateEnumId,
 } from './FieldPopupState'
 import {showNotification} from '../../../actions/notification'
 import {
@@ -48,6 +47,7 @@ import ModalDocs from '../../../components/ModalDocs/ModalDocs'
 
 interface Props {
   field?: Field
+  enums: Enum[]
   nodeCount: number
   params: any
   router: ReactRouter.InjectedRouter
@@ -57,6 +57,8 @@ interface Props {
   showDonePopup: () => void
   gettingStartedState: GettingStartedState
   nextStep: any
+  isGlobalEnumsEnabled: boolean
+  enumValues: string[]
 }
 
 export interface State {
@@ -79,7 +81,7 @@ export interface MigrationUIState {
 
 class FieldPopup extends React.Component<Props, State> {
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
     const {field} = props
 
@@ -92,11 +94,13 @@ class FieldPopup extends React.Component<Props, State> {
           level: 'warning',
         })
       }
+      if (field.enum) {
+        field['enumId'] = field.enum.id
+      }
       this.state = {
         field: {
           ...field,
-          // if null, put it to undefined
-          defaultValue: field.defaultValue === null ? undefined : stringToValue(field.defaultValue, field),
+          defaultValue: field.defaultValue === null ? null : stringToValue(field.defaultValue as string, field),
         },
 
         activeTabIndex: 0,
@@ -108,7 +112,7 @@ class FieldPopup extends React.Component<Props, State> {
       }
     } else {
       this.state = {
-        field: emptyField,
+        field: emptyField(props.nodeCount),
 
         activeTabIndex: 0,
         create: true,
@@ -141,8 +145,15 @@ class FieldPopup extends React.Component<Props, State> {
       this.props.nextStep()
     }
 
-    if (this.state.field.typeIdentifier === 'String' &&
-      this.props.gettingStartedState.isCurrentStep('STEP2_SELECT_TYPE_IMAGEURL')) {
+    if (this.state.field.name.toLowerCase() === 'description'.toLowerCase() &&
+      this.props.gettingStartedState.isCurrentStep('STEP2_ENTER_FIELD_NAME_DESCRIPTION')) {
+      this.props.nextStep()
+    }
+
+    if (this.state.field.typeIdentifier === 'String' && (
+      this.props.gettingStartedState.isCurrentStep('STEP2_SELECT_TYPE_IMAGEURL') ||
+      this.props.gettingStartedState.isCurrentStep('STEP2_SELECT_TYPE_DESCRIPTION')
+    )) {
       this.props.nextStep()
     }
   }
@@ -155,11 +166,11 @@ class FieldPopup extends React.Component<Props, State> {
         typeIdentifier,
         isRequired,
         isList,
-        enumValues,
         defaultValue,
         migrationValue,
         isUnique,
         constraints,
+        enumId,
       },
 
       showErrors,
@@ -170,7 +181,7 @@ class FieldPopup extends React.Component<Props, State> {
       loading,
     } = this.state
 
-    const {nodeCount, projectId} = this.props
+    const {nodeCount, projectId, enums, isGlobalEnumsEnabled, params} = this.props
 
     const migrationUI = getMigrationUI(nodeCount, this.state.field, this.props.field)
     const errors = isValid(nodeCount, this.state.field, this.props.field)
@@ -179,12 +190,19 @@ class FieldPopup extends React.Component<Props, State> {
     const changed = didChange(this.state.field, this.props.field)
     const breaking = isBreaking(nodeCount, this.state.field, this.props.field) && !deleting
 
-    let modalStyling = fieldModalStyle
+    let modalStyling = {
+      ...fieldModalStyle,
+      content: {
+        ...fieldModalStyle.content,
+        width: this.props.isGlobalEnumsEnabled ? 615 : 554,
+      },
+    }
+
     if (breaking || deletePopupVisible) {
       modalStyling = {
-        ...fieldModalStyle,
+        ...modalStyling,
         content: {
-          ...fieldModalStyle.content,
+          ...modalStyling.content,
           marginBottom: '120px',
         },
       }
@@ -202,7 +220,7 @@ class FieldPopup extends React.Component<Props, State> {
             @p: .bgWhite;
           }
           .popup-body {
-            @p: .overflowXHidden;
+            @p: .overflowVisible;
             transition: .1s linear height;
             max-height: calc(100vh - 200px);
           }
@@ -222,9 +240,7 @@ class FieldPopup extends React.Component<Props, State> {
           ]}
           videoId='e_sotn1uGqk'
         >
-          <div
-            className='field-popup'
-          >
+          <div className='field-popup'>
             <FieldPopupHeader
               tabs={tabs}
               activeTabIndex={activeTabIndex}
@@ -233,22 +249,24 @@ class FieldPopup extends React.Component<Props, State> {
               errors={errors}
               showErrors={showErrors}
               create={create}
+              modelName={params.modelName}
             />
-            <div
-              className='popup-body'
-            >
+            <div className='popup-body'>
               {activeTabIndex === 0 ? (
                   <BaseSettings
                     name={name}
+                    enums={enums}
+                    enumId={enumId}
+                    isGlobalEnumsEnabled={isGlobalEnumsEnabled}
                     typeIdentifier={typeIdentifier || ''}
                     description={description || ''}
                     isList={isList}
-                    enumValues={enumValues}
+                    enumValues={this.props.enumValues}
                     onChangeName={this.updateField(updateName)}
                     onChangeDescription={this.updateField(updateDescription)}
                     onToggleIsList={this.updateField(toggleIsList)}
                     onChangeTypeIdentifier={this.updateField(updateTypeIdentifier)}
-                    onChangeEnumValues={this.updateField(updateEnumValues)}
+                    onChangeEnumId={this.updateField(updateEnumId)}
                     errors={errors}
                     showErrors={showErrors}
                     showNotification={this.props.showNotification}
@@ -267,6 +285,7 @@ class FieldPopup extends React.Component<Props, State> {
                       errors={errors}
                       projectId={projectId}
                       field={this.state.field}
+                      enums={this.props.enums}
                     />
                   ) : activeTabIndex === 2 && (
                     <Constraints
@@ -431,6 +450,8 @@ class FieldPopup extends React.Component<Props, State> {
       input = {
         ...input,
         modelId,
+        // enumId: 'cj26domcw0f0m0143gglbv0zy',
+        // enumValues: [],
       }
 
       Relay.Store.commitUpdate(
@@ -466,7 +487,7 @@ class FieldPopup extends React.Component<Props, State> {
         return
       }
     } else {
-      if (this.props.gettingStartedState.isCurrentStep('STEP2_CREATE_FIELD_DESCRIPTION')) {
+      if (this.props.gettingStartedState.isCurrentStep('STEP2_CLICK_CONFIRM_DESCRIPTION')) {
         if (this.state.field.name === 'description' && this.state.field.typeIdentifier === 'String') {
           this.props.showDonePopup()
           this.props.nextStep()
@@ -527,9 +548,20 @@ const ReduxContainer = connect(
 const MappedFieldPopup = mapProps({
   params: props => props.params,
   field: props => props.viewer.field,
+  enumValues: props => {
+    const {field} = props.viewer
+    let enumValues = []
+    if (field && field.typeIdentifier === 'Enum') {
+      const enums: Enum[] = props.viewer.project.enums.edges.map(edge => edge.node)
+      enumValues = enums.find(en => field.enum.id === en.id).values
+    }
+    return enumValues
+  },
   nodeCount: props => props.viewer.model.itemCount,
   modelId: props => props.viewer.model.id,
   projectId: props => props.viewer.project.id,
+  enums: props => props.viewer.project.enums.edges.map(edge => edge.node),
+  isGlobalEnumsEnabled: props => true,
 })(ReduxContainer)
 
 export default Relay.createContainer(MappedFieldPopup, {
@@ -562,8 +594,10 @@ export default Relay.createContainer(MappedFieldPopup, {
           isList
           isUnique
           isSystem
-          enumValues
           defaultValue
+          enum {
+            id
+          }
           relation {
             id
           }
@@ -573,6 +607,16 @@ export default Relay.createContainer(MappedFieldPopup, {
         }
         project: projectByName(projectName: $projectName) {
           id
+          isGlobalEnumsEnabled
+          enums(first: 1000) {
+            edges {
+              node {
+                id
+                name
+                values
+              }
+            }
+          }
         }
       }
     `,

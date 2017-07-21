@@ -20,17 +20,26 @@ export default class IntCell extends React.Component<CellProps<number>, CellStat
   }
 
   render() {
+    // onBlur={(e: any) => this.props.save(stringToValue(e.target.value, this.props.field))}
     return (
       <input
         autoFocus
         type='text'
         ref='input'
         value={this.state.valueString}
-        onBlur={(e: any) => this.props.save(stringToValue(e.target.value, this.props.field))}
-        onKeyDown={this.props.onKeyDown}
+        onKeyDown={this.handleKeyDown}
         onChange={this.handleChange}
+        onBlur={(e: any) => this.props.save(stringToValue(e.target.value, this.props.field))}
+        placeholder='Enter an Integer...'
       />
     )
+  }
+
+  private handleKeyDown = (e) => {
+    if (e.keyCode === 13) {
+      this.props.save(stringToValue(e.target.value, this.props.field))
+    }
+    this.props.onKeyDown(e)
   }
 
   private handleChange = (e: any) => {

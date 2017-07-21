@@ -12,7 +12,7 @@
   "plugins": [
     "styled-jsx-postcss/babel",
     "transform-runtime",
-    "react-relay",
+    "./build/babelRelayPlugin",
     "transform-async-to-generator"
   ],
   "env": {

@@ -1,15 +1,19 @@
 import * as React from 'react'
 import SchemaOverviewHeader from './SchemaOverviewHeader'
 import TypeList from './TypeList'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Project, Model} from '../../../types/types'
 import AddType from './AddType'
 import Tether from '../../../components/Tether/Tether'
+import * as cn from 'classnames'
 
 interface Props {
   project: Project
   location: any
   editingModelName?: string
+  blur: boolean
+  setScroll: (n: number) => void
+  params: any
 }
 export type SchemaOverviewFilter = 'detail' | 'overview'
 
@@ -30,7 +34,7 @@ class SchemaOverview extends React.Component<Props,State> {
     }
   }
   render() {
-    const {editingModelName} = this.props
+    const {editingModelName, blur} = this.props
     const {activeFilter, addingType, editingModel} = this.state
     let selectedModel = undefined
     if (this.props.location.query.hasOwnProperty('selectedModel')) {
@@ -38,10 +42,18 @@ class SchemaOverview extends React.Component<Props,State> {
     }
 
     return (
-      <div className='schema-overview'>
+      <div
+        className={cn('schema-overview', {blur})}
+      >
         <style jsx>{`
           .schema-overview {
-            @p: .bgDarkBlue, .w50, .flex, .flexColumn;
+            @p: .bgDarkBlue, .w100, .flex, .flexColumn, .overflowAuto;
+            transition: .3s linear all;
+          }
+          .schema-overview.blur {
+            @p: .o50;
+            filter: blur(5px);
+            pointer-events: none;
           }
           .schema-overview-header {
             @p: .flexFixed;
@@ -61,8 +73,8 @@ class SchemaOverview extends React.Component<Props,State> {
               }}
               steps={[{
                 step: 'STEP1_CREATE_POST_MODEL',
-                title: `Create a Model called "Post"`,
-                description: 'Models represent a certain type of data. To manage our Instagram posts, the "Post" model will have an image URL and a description.', // tslint:disable-line
+                title: `Create a Type called "Post"`,
+                description: 'To manage our Instagram posts, the "Post" type will have an image URL and a description. Create a type and call it "Post".', // tslint:disable-line
               }]}
               offsetX={14}
               offsetY={-22}
@@ -87,6 +99,8 @@ class SchemaOverview extends React.Component<Props,State> {
           onEditModel={this.handleEditModel}
           selectedModel={selectedModel}
           editingModelName={editingModelName}
+          setScroll={this.props.setScroll}
+          params={this.props.params}
         />
       </div>
     )

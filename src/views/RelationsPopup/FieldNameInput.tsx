@@ -7,6 +7,7 @@ interface State {
   isHovered: boolean
   isEnteringFieldName: boolean
   originalFieldName: string
+  isDirty: boolean
 }
 
 interface Props {
@@ -25,6 +26,7 @@ export default class FieldNameInput extends React.Component<Props, State> {
       isHovered: false,
       isEnteringFieldName: false,
       originalFieldName: props.relatedFieldName,
+      isDirty: false,
     }
   }
 
@@ -67,7 +69,9 @@ export default class FieldNameInput extends React.Component<Props, State> {
 
           `}</style>
           {!this.state.isEnteringFieldName && !this.state.isHovered &&
-          (<div className={`f20 purpleColor`}>{this.props.relatedFieldName}</div>
+          (<div className={`f20 purpleColor`}>
+            {this.props.relatedFieldName}
+          </div>
           )}
           {!this.state.isEnteringFieldName && this.state.isHovered &&
           (<div className='flex itemsCenter '>
@@ -84,18 +88,19 @@ export default class FieldNameInput extends React.Component<Props, State> {
           (
 
             <div className='flex itemsCenter'>
-              {Boolean(invalidInputMessage) &&
-              <Tooltip
-                className='red'
-                text={invalidInputMessage}
-              >
-                <Icon
-                  className='mr6'
-                  src={require('../../assets/icons/warning_red.svg')}
-                  width={22}
-                  height={22}
-                />
-              </Tooltip>}
+              {Boolean(invalidInputMessage) && this.state.isDirty && (
+                <Tooltip
+                  className='red'
+                  text={invalidInputMessage}
+                >
+                  <Icon
+                    className='mr6'
+                    src={require('../../assets/icons/warning_red.svg')}
+                    width={22}
+                    height={22}
+                  />
+                </Tooltip>
+              )}
               <input
                 type='text'
                 autoFocus={true}
@@ -106,13 +111,13 @@ export default class FieldNameInput extends React.Component<Props, State> {
                 ${Boolean(invalidInputMessage) ? ' red' : ' purpleColor'}`}
                 onKeyDown={this.handleKeyDown}
                 value={this.props.relatedFieldName}
-                onChange={(e: any) => {
-                  this.props.didChangeFieldName(e.target.value)
-                }}
+                onChange={this.handleChange}
               />
             </div>
           )}
-          <div className={`move fieldType ${!shouldBreak ? 'ml6' : ''}`}>{this.props.relatedFieldType}</div>
+          <div className={`move fieldType ${!shouldBreak ? 'ml6' : ''}`}>
+            {this.props.relatedFieldType}
+          </div>
         </div>
       )
     } else {
@@ -140,6 +145,13 @@ export default class FieldNameInput extends React.Component<Props, State> {
         {relatedFieldElement}
       </div>
     )
+  }
+
+  private handleChange = (e: any) => {
+    this.props.didChangeFieldName(e.target.value)
+    if (!this.state.isDirty) {
+      this.setState({isDirty: true} as State)
+    }
   }
 
   private handleKeyDown = (e) => {
@@ -170,7 +182,7 @@ export default class FieldNameInput extends React.Component<Props, State> {
     }
 
     if (this.props.forbiddenFieldNames.includes(input)) {
-      return 'Field with name \'' + input + '\' already exists in this project.'
+      return 'Field with name \'' + input + '\' already exists on this model'
     }
     return null
   }

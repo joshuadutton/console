@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as ReactModal from 'react-modal'
+const ReactModal: any = require('react-modal')
 
 interface Props {
   isOpen: boolean

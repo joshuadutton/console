@@ -1,4 +1,4 @@
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Field, RelayConnection} from '../types/types'
 import {isScalar} from '../utils/graphql'
 

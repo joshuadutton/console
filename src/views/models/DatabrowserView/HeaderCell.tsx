@@ -1,5 +1,5 @@
 import * as React from 'react'
-import * as Relay from 'react-relay'
+import * as Relay from 'react-relay/classic'
 import {Icon} from 'graphcool-styles'
 import {Link} from 'react-router'
 import {getFieldTypeName} from '../../../utils/valueparser'
@@ -122,7 +122,6 @@ export default Relay.createContainer(ConnectedHeaderCell, {
             typeIdentifier
             isSystem
             isRequired
-            enumValues
             relatedModel {
               name
             }
